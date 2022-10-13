@@ -30,17 +30,18 @@ def main():
 
 def display(results):
     SIZE = 9
-    lang = None
     width = 0
     for result in results:
         if len(result.name) > width:
             width = len(result.name)
+    lang = None
     subtotal = 0
     # TODO use nice Unicode lines
     for result in sorted(results, key=lambda r: (r[0], r[2], r[1].lower())):
         if lang is None or lang != result.lang:
             if lang is not None:
                 display_subtotal(subtotal, width, SIZE)
+                subtotal = 0
             lang = result.lang
             name = NAME_FOR_LANG[lang]
             print(name, end=' ')
