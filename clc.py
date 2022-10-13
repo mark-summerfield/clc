@@ -24,11 +24,11 @@ def main():
     config = get_config()
     with concurrent.futures.ProcessPoolExecutor() as exe:
         results = exe.map(count_lines, get_filenames(config))
-    results = sorted(results, key=lambda r: (r[0], r[2], r[1].lower()))
+    results = tuple(results)
     if config.totals:
         display_totals(results)
     else:
-        display_full(results)
+        display_full(results, config.sortbylines)
 
 
 def display_totals(results):
@@ -46,7 +46,7 @@ def display_totals(results):
               f'{total:7,d} lines')
 
 
-def display_full(results):
+def display_full(results, sortbylines):
     SIZE = 7
     NWIDTH = SIZE - 1
     width = 0
@@ -55,7 +55,8 @@ def display_full(results):
             width = len(result.name)
     lang = None
     count = subtotal = 0
-    for result in sorted(results, key=lambda r: (r[0], r[2], r[1].lower())):
+    sortby = bylines if sortbylines else bynames
+    for result in sorted(results, key=sortby):
         if lang is None or lang != result.lang:
             if lang is not None:
                 display_subtotal(lang, count, subtotal, width, SIZE, NWIDTH)
@@ -69,6 +70,14 @@ def display_full(results):
     if lang is not None:
         display_subtotal(lang, count, subtotal, width, SIZE, NWIDTH)
         print('━' * (width + SIZE))
+
+
+def bynames(result):
+    return result.lang, result.name.lower(), result.lines
+
+
+def bylines(result):
+    return result.lang, result.lines, result.name.lower()
 
 
 def display_subtotal(lang, count, subtotal, width, size, nwidth):
@@ -86,6 +95,11 @@ def count_lines(name):
     if not os.path.getsize(name):
         return Result(lang, name, 0)
     with open(name, 'rb') as file:
+        if lang is None:
+            line = file.readline()
+            if line.startswith(b'#!') and b'python' in line:
+                lang = 'py'
+            file.seek(0)
         with mmap.mmap(file.fileno(), 0, prot=mmap.PROT_READ) as mm:
             return Result(lang, name, mm[:].count(b'\n'))
 
@@ -119,6 +133,8 @@ def get_filenames(config):
 
 def valid_filename(config, name):
     path = pathlib.Path(name)
+    if path.name in config.include:
+        return True
     if path.name.startswith('.'):
         return False
     if set(path.parts) & config.exclude:
@@ -145,6 +161,8 @@ def get_config():
 Counts the lines in the code files for the languages processed.
 Supported languages: {supported}.
 ''')
+    parser.add_argument('-s', '--sortbylines', action='store_true',
+                        help='sort by lines [default: sort by names]')
     parser.add_argument('-t', '--totals', action='store_true',
                         help='output only per-language totals not per file')
     parser.add_argument('-l', '--language', nargs='*',
@@ -154,6 +172,10 @@ Supported languages: {supported}.
         '-e', '--exclude', nargs='*',
         help='the files and folders to exclude [default: '
         f'.HIDDEN {exclude}]')
+    parser.add_argument(
+        '-i', '--include', nargs='*',
+        help='the files and folders to include (e.g., those without '
+        'suffixes')
     parser.add_argument(
         'file', default='.', nargs='*',
         help='the files to count or the folders to recursively search '
@@ -167,6 +189,7 @@ Supported languages: {supported}.
         config.exclude = set(EXCLUDE)
     else:
         config.exclude = set(config.exclude) | set(EXCLUDE)
+    config.include = set(config.include) if config.include else set()
     if config.file == '.':
         config.file = {os.path.abspath('.')}
     else:
