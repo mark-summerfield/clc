@@ -36,26 +36,28 @@ def display(results):
         if len(result.name) > width:
             width = len(result.name)
     lang = None
-    subtotal = 0
+    count = subtotal = 0
     # TODO use nice Unicode lines
     for result in sorted(results, key=lambda r: (r[0], r[2], r[1].lower())):
         if lang is None or lang != result.lang:
             if lang is not None:
-                display_subtotal(subtotal, width, SIZE, NWIDTH)
-                subtotal = 0
+                display_subtotal(count, subtotal, width, SIZE, NWIDTH)
+                count = subtotal = 0
             lang = result.lang
             name = f' {NAME_FOR_LANG[lang]} '
             print(name.center(width + SIZE, '='))
         print(f'{result.name:{width}} {result.lines: >{NWIDTH},d}')
         subtotal += result.lines
+        count += 1
     if lang is not None:
-        display_subtotal(subtotal, width, SIZE, NWIDTH)
+        display_subtotal(count, subtotal, width, SIZE, NWIDTH)
         print('=' * (width + SIZE))
 
 
-def display_subtotal(subtotal, width, size, nwidth):
+def display_subtotal(count, subtotal, width, size, nwidth):
     print('-' * (width + size))
-    title = 'Total'.ljust(width)
+    s = ' ' if count == 1 else 's'
+    title = f'Total lines ({count:,} file{s})'.ljust(width)
     print(f'{title} {subtotal: >{nwidth},d}')
 
 
@@ -146,9 +148,9 @@ Supported languages: {supported}.
     else:
         config.exclude = set(config.exclude) | set(EXCLUDE)
     if config.file == '.':
-        config.file = {'.'}
+        config.file = {os.path.abspath('.')}
     else:
-        config.file = set(config.file)
+        config.file = {os.path.abspath(file) for file in config.file}
     return config
 
 
