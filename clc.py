@@ -173,7 +173,6 @@ def get_config():
         if os.path.isfile(filename):
             try:
                 uxo = uxf.load(filename)
-                print(type(uxo.value), uxo.value)
                 d = merge(d, uxo.value)
             except uxf.Error as err:
                 print(err)
