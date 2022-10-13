@@ -29,7 +29,8 @@ def main():
 
 
 def display(results):
-    SIZE = 9
+    SIZE = 7
+    NWIDTH = SIZE - 1
     width = 0
     for result in results:
         if len(result.name) > width:
@@ -40,22 +41,22 @@ def display(results):
     for result in sorted(results, key=lambda r: (r[0], r[2], r[1].lower())):
         if lang is None or lang != result.lang:
             if lang is not None:
-                display_subtotal(subtotal, width, SIZE)
+                display_subtotal(subtotal, width, SIZE, NWIDTH)
                 subtotal = 0
             lang = result.lang
-            name = NAME_FOR_LANG[lang]
-            print(name, end=' ')
-            print('=' * (width + SIZE - len(name)))
-        print(f'   {result.name:{width}} {result.lines: >6,d}')
+            name = f' {NAME_FOR_LANG[lang]} '
+            print(name.center(width + SIZE, '='))
+        print(f'{result.name:{width}} {result.lines: >{NWIDTH},d}')
         subtotal += result.lines
     if lang is not None:
-        display_subtotal(subtotal, width, SIZE)
+        display_subtotal(subtotal, width, SIZE, NWIDTH)
+        print('=' * (width + SIZE))
 
 
-def display_subtotal(subtotal, width, size):
-    print('  ', '-' * (width + size - 2))
+def display_subtotal(subtotal, width, size, nwidth):
+    print('-' * (width + size))
     title = 'Total'.ljust(width)
-    print(f'   {title} {subtotal: >6,d}')
+    print(f'{title} {subtotal: >{nwidth},d}')
 
 
 def count_lines(name):
