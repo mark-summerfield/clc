@@ -3,6 +3,9 @@
 # License: GPLv3
 
 import argparse
+import collections
+import concurrent.futures
+import mmap
 import os
 import pathlib
 
@@ -12,19 +15,65 @@ EXTS_FOR_LANG = {
     'rs': {'.rs'}
     }
 EXCLUDE = {'__pycache__', 'build', 'dist', 'target'}
+NAME_FOR_LANG = dict(cpp='C++', py='Python', rs='Rust')
+
+Result = collections.namedtuple('Result', ('lang', 'name', 'lines'))
 
 
 def main():
     config = get_config()
-    for job in get_jobs(config):
-        print(job)
+    with concurrent.futures.ProcessPoolExecutor() as exe:
+        results = exe.map(count_lines, get_filenames(config))
+    results = sorted(results, key=lambda r: (r[0], r[2], r[1].lower()))
+    display(results)
 
 
-def count_lines():
-    pass
+def display(results):
+    SIZE = 9
+    lang = None
+    width = 0
+    for result in results:
+        if len(result.name) > width:
+            width = len(result.name)
+    subtotal = 0
+    # TODO use nice Unicode lines
+    for result in sorted(results, key=lambda r: (r[0], r[2], r[1].lower())):
+        if lang is None or lang != result.lang:
+            if lang is not None:
+                display_subtotal(subtotal, width, SIZE)
+            lang = result.lang
+            name = NAME_FOR_LANG[lang]
+            print(name, end=' ')
+            print('=' * (width + SIZE - len(name)))
+        print(f'   {result.name:{width}} {result.lines: >6,d}')
+        subtotal += result.lines
+    if lang is not None:
+        display_subtotal(subtotal, width, SIZE)
 
 
-def get_jobs(config):
+def display_subtotal(subtotal, width, size):
+    print('  ', '-' * (width + size - 2))
+    title = 'Total'.ljust(width)
+    print(f'   {title} {subtotal: >6,d}')
+
+
+def count_lines(name):
+    lang = lang_for_name(name)
+    if not os.path.getsize(name):
+        return Result(lang, name, 0)
+    with open(name, 'rb') as file:
+        with mmap.mmap(file.fileno(), 0, prot=mmap.PROT_READ) as mm:
+            return Result(lang, name, mm[:].count(b'\n'))
+
+
+def lang_for_name(name):
+    ext = pathlib.Path(name).suffix
+    for lang, extensions in EXTS_FOR_LANG.items():
+        if ext in extensions:
+            return lang
+
+
+def get_filenames(config):
     for name in config.file:
         if os.path.isfile(name):
             if valid_filename(config, name):
@@ -103,23 +152,3 @@ Supported languages: {supported}.
 
 if __name__ == '__main__':
     main()
-
-'''
-Alpha sorted except that .hpp comes before .cpp
-
-     C++              222
-     --------------------
-     path/to/app.cpp   20
-     path/to/lib.hpp   82
-     path/to/lib.cpp  120
-     ====================
-     Python           852
-     --------------------
-     path/to/app.pyw   24
-     path/to/lib.py   828
-     ====================
-     Rust             294
-     --------------------
-     path/to/app.rs   203
-     path/to/lib.rs    91
-'''
