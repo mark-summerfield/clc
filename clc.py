@@ -14,7 +14,7 @@ EXTS_FOR_LANG = {
     'py': {'.pyw', '.py'},
     'rs': {'.rs'}
     }
-EXCLUDE = {'__pycache__', 'build', 'dist', 'target'}
+EXCLUDE = {'__pycache__', 'build', 'dist', 'setup.py', 'target'}
 NAME_FOR_LANG = dict(cpp='C++', py='Python', rs='Rust')
 
 Result = collections.namedtuple('Result', ('lang', 'name', 'lines'))
@@ -25,10 +25,28 @@ def main():
     with concurrent.futures.ProcessPoolExecutor() as exe:
         results = exe.map(count_lines, get_filenames(config))
     results = sorted(results, key=lambda r: (r[0], r[2], r[1].lower()))
-    display(results)
+    if config.totals:
+        display_totals(results)
+    else:
+        display_full(results)
 
 
-def display(results):
+def display_totals(results):
+    total_for_lang = collections.defaultdict(int)
+    count_for_lang = collections.defaultdict(int)
+    width = max(len(name) for name in NAME_FOR_LANG) + 4
+    for result in results:
+        total_for_lang[result.lang] += result.lines
+        count_for_lang[result.lang] += 1
+    for lang, total in sorted(total_for_lang.items(),
+                              key=lambda pair: (pair[0].lower())):
+        count = count_for_lang[lang]
+        s = ' ' if count == 1 else 's'
+        print(f'{NAME_FOR_LANG[lang]:<{width}} {count:3,d} file{s} '
+              f'{total:7,d} lines')
+
+
+def display_full(results):
     SIZE = 7
     NWIDTH = SIZE - 1
     width = 0
@@ -37,28 +55,30 @@ def display(results):
             width = len(result.name)
     lang = None
     count = subtotal = 0
-    # TODO use nice Unicode lines
     for result in sorted(results, key=lambda r: (r[0], r[2], r[1].lower())):
         if lang is None or lang != result.lang:
             if lang is not None:
-                display_subtotal(count, subtotal, width, SIZE, NWIDTH)
+                display_subtotal(lang, count, subtotal, width, SIZE, NWIDTH)
                 count = subtotal = 0
             lang = result.lang
             name = f' {NAME_FOR_LANG[lang]} '
-            print(name.center(width + SIZE, '='))
+            print(name.center(width + SIZE, '━'))
         print(f'{result.name:{width}} {result.lines: >{NWIDTH},d}')
         subtotal += result.lines
         count += 1
     if lang is not None:
-        display_subtotal(count, subtotal, width, SIZE, NWIDTH)
-        print('=' * (width + SIZE))
+        display_subtotal(lang, count, subtotal, width, SIZE, NWIDTH)
+        print('━' * (width + SIZE))
 
 
-def display_subtotal(count, subtotal, width, size, nwidth):
-    print('-' * (width + size))
+def display_subtotal(lang, count, subtotal, width, size, nwidth):
+    lang = NAME_FOR_LANG[lang]
+    span = width + size
+    print('─' * span)
     s = ' ' if count == 1 else 's'
-    title = f'Total lines ({count:,} file{s})'.ljust(width)
-    print(f'{title} {subtotal: >{nwidth},d}')
+    numbers = f'{count:3,d} file{s} {subtotal:{nwidth},d} lines'
+    span -= len(numbers)
+    print(f'{lang:<{span}}{numbers}')
 
 
 def count_lines(name):
@@ -89,7 +109,7 @@ def get_filenames(config):
                         filename = os.path.join(root, file)
                         if valid_filename(config, filename):
                             yield filename
-                    # Python-specific optimization not strictly needed
+                    # Python-specific optimization not actually needed
                     for exclude in config.exclude:
                         try:
                             dirs.remove(exclude)
