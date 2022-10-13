@@ -1,10 +1,13 @@
-# TODO -i|--include name1 [name2 ...
-#      This is to allow for files that don't have suffixes in which case
-#      must discover lang
+# TODO clc.rs single threaded
+# TODO clc.rs multi-threaded with rayon
+
 # TODO clc.cpp single threaded
 # TODO clc.cpp multi-threaded
 
 clc.py
+
+src/main.rs
+Cargo.toml
 
 clc.cpp
 

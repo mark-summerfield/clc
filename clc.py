@@ -2,12 +2,23 @@
 # Copyright © 2022 Mark Summerfield. All rights reserved.
 # License: GPLv3
 
+# See the end for clc.uxf config format info.
 import argparse
 import collections
 import concurrent.futures
 import mmap
 import os
 import pathlib
+import types
+
+import appdirs
+
+try:
+    import sys
+    import uxf
+except ImportError: # locally installed dev version
+    sys.path.append(os.path.expanduser('~/app/uxf/py/'))
+    import uxf
 
 EXTS_FOR_LANG = {
     'cpp': {'.hpp', '.hxx', '.cpp', '.cxx'},
@@ -156,6 +167,33 @@ def valid_dirname(config, name):
 
 
 def get_config():
+    d = {}
+    for filename in ('/etc/clc.uxf', os.path.expanduser('~/.clc.uxf'),
+                     appdirs.user_config_dir('clc.uxf'), './.clc.uxf'):
+        if os.path.isfile(filename):
+            try:
+                uxo = uxf.load(filename)
+                print(type(uxo.value), uxo.value)
+                d = merge(d, uxo.value)
+            except uxf.Error as err:
+                print(err)
+    cli = vars(get_cli_config())
+    return types.SimpleNamespace(**merge(d, cli))
+
+
+def merge(d1, d2):
+    for key, value in d2.items():
+        if key in d1: # override
+            if key in {'totals', 'sortbyname'}:
+                d1[key] = value
+            else:
+                d1[key] = set(d1[key]) | set(value)
+        else:
+            d1[key] = value
+    return d1
+
+
+def get_cli_config():
     supported = ' '.join(sorted(EXTS_FOR_LANG.keys()))
     parser = argparse.ArgumentParser(description=f'''
 Counts the lines in the code files for the languages processed.
@@ -199,3 +237,30 @@ Supported languages: {supported}.
 
 if __name__ == '__main__':
     main()
+
+
+'''
+Can provide config in files (which are overridden by the command line).
+
+On Linux: /etc/clc.uxf ~/.clc.uxf ~/.config/clc.uxr ./.clc.uxf
+
+The file may have any, all, or no items. Here's one that has all the
+options with their defaults:
+
+    uxf 1
+    {
+        <sortbylines> no
+        <totals> no
+        <language> ?
+        <exclude> [<__pycache__> <build> <build.rs> <dist> <setup.py>
+                   <target>]
+        <include> ?
+    }
+
+To change just one or a few, specify only those, e.g.,
+
+    uxf 1
+    {
+        <sortbylines> yes
+    }
+'''
