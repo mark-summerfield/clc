@@ -1,5 +1,15 @@
+# TODO -a|--alpha
+#      sort alphabeically (case-insensitve) by filename rather than by lines
+# TODO -i|--include name1 [name2 ...
+#      This is to allow for files that don't have suffixes in which case
+#      must discover lang
+# TODO clc.cpp single threaded
+# TODO clc.cpp multi-threaded
+
 clc.py
 
 clc.cpp
 
 st.sh
+
+# :vim syn=yaml:

@@ -14,7 +14,7 @@ EXTS_FOR_LANG = {
     'py': {'.pyw', '.py'},
     'rs': {'.rs'}
     }
-EXCLUDE = {'__pycache__', 'build', 'dist', 'setup.py', 'target'}
+EXCLUDE = {'__pycache__', 'build', 'build.rs', 'dist', 'setup.py', 'target'}
 NAME_FOR_LANG = dict(cpp='C++', py='Python', rs='Rust')
 
 Result = collections.namedtuple('Result', ('lang', 'name', 'lines'))
