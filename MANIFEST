@@ -1,5 +1,6 @@
 # TODO clc.rs single threaded
 # TODO clc.rs multi-threaded with rayon
+# (so I can compare exe size with C++)
 
 # TODO clc.cpp single threaded
 # TODO clc.cpp multi-threaded
