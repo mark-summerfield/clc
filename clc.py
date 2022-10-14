@@ -10,11 +10,12 @@ import os
 import pathlib
 import time
 
-FileResult = collections.namedtuple('FileResult', ('lang', 'name', 'lines'))
+FileData = collections.namedtuple('FileData', ('lang', 'filename', 'lines'))
 LangData = collections.namedtuple('LangData', ('name', 'exts'))
 
 EXCLUDE = {'__pycache__', 'build', 'build.rs', 'dist', 'setup.py', 'target',
            '.git', '.hg'}
+
 DATA_FOR_LANG = {
     'c': LangData('C', {'.h', '.c'}),
     'cpp': LangData('C++', {'.hpp', '.hxx', '.cpp', '.cxx'}),
@@ -53,8 +54,8 @@ def display_totals(results, secs):
                               key=lambda pair: (pair[0].lower())):
         count = count_for_lang[lang]
         s = ' ' if count == 1 else 's'
-        print(f'{DATA_FOR_LANG[lang].name:<{width}} {count:5,d} file{s} '
-              f'{total:10,d} lines')
+        print(f'{DATA_FOR_LANG[lang].name:<{width}} '
+              f'{count:5,d} file{s} {total:10,d} lines')
     print(f'{secs:.3f} sec'.rjust(width))
 
 
@@ -63,12 +64,11 @@ def display_full(results, sortbylines):
     NWIDTH = SIZE - 1
     width = 0
     for result in results:
-        if len(result.name) > width:
-            width = len(result.name)
+        if len(result.filename) > width:
+            width = len(result.filename)
     lang = None
     count = subtotal = 0
-    sortby = bylines if sortbylines else bynames
-    for result in sorted(results, key=sortby):
+    for result in sorted(results, key=bylines if sortbylines else bynames):
         if lang is None or lang != result.lang:
             if lang is not None:
                 display_subtotal(lang, count, subtotal, width, SIZE, NWIDTH)
@@ -76,7 +76,7 @@ def display_full(results, sortbylines):
             lang = result.lang
             name = f' {DATA_FOR_LANG[lang].name} '
             print(name.center(width + SIZE, '━'))
-        print(f'{result.name:{width}} {result.lines: >{NWIDTH},d}')
+        print(f'{result.filename:{width}} {result.lines: >{NWIDTH},d}')
         subtotal += result.lines
         count += 1
     if lang is not None:
@@ -85,11 +85,11 @@ def display_full(results, sortbylines):
 
 
 def bynames(result):
-    return result.lang, result.name.lower(), result.lines
+    return result.lang, result.filename.lower(), result.lines
 
 
 def bylines(result):
-    return result.lang, result.lines, result.name.lower()
+    return result.lang, result.lines, result.filename.lower()
 
 
 def display_subtotal(lang, count, subtotal, width, size, nwidth):
@@ -105,7 +105,7 @@ def display_subtotal(lang, count, subtotal, width, size, nwidth):
 def count_lines(name):
     lang = lang_for_name(name)
     if not os.path.getsize(name):
-        return FileResult(lang, name, 0)
+        return FileData(lang, name, 0)
     with open(name, 'rb') as file:
         if lang is None:
             line = file.readline()
@@ -113,7 +113,7 @@ def count_lines(name):
                 lang = 'py'
             file.seek(0)
         with mmap.mmap(file.fileno(), 0, prot=mmap.PROT_READ) as mm:
-            return FileResult(lang, name, mm[:].count(b'\n'))
+            return FileData(lang, name, mm[:].count(b'\n'))
 
 
 def lang_for_name(name):
