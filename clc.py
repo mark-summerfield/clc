@@ -8,6 +8,7 @@ import concurrent.futures
 import mmap
 import os
 import pathlib
+import sys
 import time
 
 FileData = collections.namedtuple('FileData', ('lang', 'filename', 'lines'))
@@ -31,6 +32,13 @@ DATA_FOR_LANG = { # Additions here may need additions in lang_for_line()
     'tcl': LangData('Tcl', {'.tcl'}),
     'vala': LangData('Vala', {'.vala'}),
     }
+
+if sys.platform == 'win32':
+    THIN = '─'
+    THICK = '═'
+else:
+    THIN = '─'
+    THICK = '━'
 
 
 def main():
@@ -78,14 +86,14 @@ def display_full(file_data, sortbylines):
                 count = subtotal = 0
             lang = file_datum.lang
             name = f' {DATA_FOR_LANG[lang].name} '
-            print(name.center(width + SIZE, '━'))
+            print(name.center(width + SIZE, THICK))
         print(f'{file_datum.filename:{width}} '
               f'{file_datum.lines: >{NWIDTH},d}')
         subtotal += file_datum.lines
         count += 1
     if lang is not None:
         display_subtotal(lang, count, subtotal, width, SIZE, NWIDTH)
-        print('━' * (width + SIZE))
+        print(THICK * (width + SIZE))
 
 
 def bynames(file_datum):
@@ -99,7 +107,7 @@ def bylines(file_datum):
 def display_subtotal(lang, count, subtotal, width, size, nwidth):
     lang = DATA_FOR_LANG[lang].name
     span = width + size
-    print('─' * span)
+    print(THIN * span)
     s = ' ' if count == 1 else 's'
     numbers = f'{count:3,d} file{s} {subtotal:{nwidth},d} lines'
     span -= len(numbers)
@@ -114,7 +122,7 @@ def count_lines(name):
         if lang is None:
             lang = lang_for_line(file.readline())
             file.seek(0)
-        with mmap.mmap(file.fileno(), 0, prot=mmap.PROT_READ) as mm:
+        with mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ) as mm:
             return FileData(lang, name, mm[:].count(b'\n'))
 
 
