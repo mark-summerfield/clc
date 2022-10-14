@@ -9,3 +9,7 @@ opt-level = 3 # 3 is fastest binary; use "s" for smallest
 lto = true
 
 [dependencies]
+
+[dependencies.clap]
+version = "^4"
+features = [ "derive", "wrap_help",]

@@ -5,13 +5,13 @@
 # TODO clc.cpp single threaded
 # TODO clc.cpp multi-threaded
 
-clc.py
-
 rs/src/main.rs
 rs/Cargo.toml
 
 # TODO SConstruct & SConscript (see ~/app/uxf/cpp)
 cpp/clc.cpp
+
+clc.py
 
 st.sh
 
