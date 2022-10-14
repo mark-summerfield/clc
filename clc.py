@@ -2,50 +2,50 @@
 # Copyright © 2022 Mark Summerfield. All rights reserved.
 # License: GPLv3
 
-# See the end for clc.uxf config format info.
 import argparse
 import collections
 import concurrent.futures
 import mmap
 import os
 import pathlib
-import types
+import time
 
-import appdirs
+FileResult = collections.namedtuple('FileResult', ('lang', 'name', 'lines'))
+LangData = collections.namedtuple('LangData', ('name', 'exts'))
 
-try:
-    import sys
-    import uxf
-except ImportError: # locally installed dev version
-    sys.path.append(os.path.expanduser('~/app/uxf/py/'))
-    import uxf
-
-EXTS_FOR_LANG = {
-    'cpp': {'.hpp', '.hxx', '.cpp', '.cxx'},
-    'py': {'.pyw', '.py'},
-    'rs': {'.rs'}
+EXCLUDE = {'__pycache__', 'build', 'build.rs', 'dist', 'setup.py', 'target',
+           '.git', '.hg'}
+DATA_FOR_LANG = {
+    'c': LangData('C', {'.h', '.c'}),
+    'cpp': LangData('C++', {'.hpp', '.hxx', '.cpp', '.cxx'}),
+    'd': LangData('D', {'.d'}),
+    'go': LangData('Go', {'.go'}),
+    'java': LangData('Java', {'.java'}),
+    'julia': LangData('Julia', {'.jl'}),
+    'nim': LangData('Nim', {'.nim'}),
+    'py': LangData('Python', {'.pyw', '.py', '.pxd'}),
+    'rs': LangData('Rust', {'.rs'}),
+    'tcl': LangData('Tcl', {'.tcl'}),
+    'vala': LangData('Vala', {'.vala'}),
     }
-EXCLUDE = {'__pycache__', 'build', 'build.rs', 'dist', 'setup.py', 'target'}
-NAME_FOR_LANG = dict(cpp='C++', py='Python', rs='Rust')
-
-Result = collections.namedtuple('Result', ('lang', 'name', 'lines'))
 
 
 def main():
     config = get_config()
+    t = time.monotonic()
     with concurrent.futures.ProcessPoolExecutor() as exe:
         results = exe.map(count_lines, get_filenames(config))
     results = tuple(results)
     if config.totals:
-        display_totals(results)
+        display_totals(results, time.monotonic() - t)
     else:
         display_full(results, config.sortbylines)
 
 
-def display_totals(results):
+def display_totals(results, secs):
     total_for_lang = collections.defaultdict(int)
     count_for_lang = collections.defaultdict(int)
-    width = max(len(name) for name in NAME_FOR_LANG) + 4
+    width = max(len(name) for name in DATA_FOR_LANG.keys()) + 4
     for result in results:
         total_for_lang[result.lang] += result.lines
         count_for_lang[result.lang] += 1
@@ -53,12 +53,13 @@ def display_totals(results):
                               key=lambda pair: (pair[0].lower())):
         count = count_for_lang[lang]
         s = ' ' if count == 1 else 's'
-        print(f'{NAME_FOR_LANG[lang]:<{width}} {count:3,d} file{s} '
-              f'{total:7,d} lines')
+        print(f'{DATA_FOR_LANG[lang].name:<{width}} {count:5,d} file{s} '
+              f'{total:10,d} lines')
+    print(f'{secs:.3f} sec'.rjust(width))
 
 
 def display_full(results, sortbylines):
-    SIZE = 7
+    SIZE = 11
     NWIDTH = SIZE - 1
     width = 0
     for result in results:
@@ -73,7 +74,7 @@ def display_full(results, sortbylines):
                 display_subtotal(lang, count, subtotal, width, SIZE, NWIDTH)
                 count = subtotal = 0
             lang = result.lang
-            name = f' {NAME_FOR_LANG[lang]} '
+            name = f' {DATA_FOR_LANG[lang].name} '
             print(name.center(width + SIZE, '━'))
         print(f'{result.name:{width}} {result.lines: >{NWIDTH},d}')
         subtotal += result.lines
@@ -92,7 +93,7 @@ def bylines(result):
 
 
 def display_subtotal(lang, count, subtotal, width, size, nwidth):
-    lang = NAME_FOR_LANG[lang]
+    lang = DATA_FOR_LANG[lang].name
     span = width + size
     print('─' * span)
     s = ' ' if count == 1 else 's'
@@ -104,7 +105,7 @@ def display_subtotal(lang, count, subtotal, width, size, nwidth):
 def count_lines(name):
     lang = lang_for_name(name)
     if not os.path.getsize(name):
-        return Result(lang, name, 0)
+        return FileResult(lang, name, 0)
     with open(name, 'rb') as file:
         if lang is None:
             line = file.readline()
@@ -112,13 +113,13 @@ def count_lines(name):
                 lang = 'py'
             file.seek(0)
         with mmap.mmap(file.fileno(), 0, prot=mmap.PROT_READ) as mm:
-            return Result(lang, name, mm[:].count(b'\n'))
+            return FileResult(lang, name, mm[:].count(b'\n'))
 
 
 def lang_for_name(name):
     ext = pathlib.Path(name).suffix
-    for lang, extensions in EXTS_FOR_LANG.items():
-        if ext in extensions:
+    for lang, lang_data in DATA_FOR_LANG.items():
+        if ext in lang_data.exts:
             return lang
 
 
@@ -153,7 +154,7 @@ def valid_filename(config, name):
     if not path.suffix:
         return False
     for lang in config.language:
-        if path.suffix in EXTS_FOR_LANG[lang]:
+        if path.suffix in DATA_FOR_LANG[lang].exts:
             return True
     return False
 
@@ -167,59 +168,34 @@ def valid_dirname(config, name):
 
 
 def get_config():
-    d = {}
-    for filename in ('/etc/clc.uxf', os.path.expanduser('~/.clc.uxf'),
-                     appdirs.user_config_dir('clc.uxf'), './.clc.uxf'):
-        if os.path.isfile(filename):
-            try:
-                uxo = uxf.load(filename)
-                d = merge(d, uxo.value)
-            except uxf.Error as err:
-                print(err)
-    cli = vars(get_cli_config())
-    return types.SimpleNamespace(**merge(d, cli))
-
-
-def merge(d1, d2):
-    for key, value in d2.items():
-        if key in d1: # override
-            if key in {'totals', 'sortbyname'}:
-                d1[key] = value
-            else:
-                d1[key] = set(d1[key]) | set(value)
-        else:
-            d1[key] = value
-    return d1
-
-
-def get_cli_config():
-    supported = ' '.join(sorted(EXTS_FOR_LANG.keys()))
+    supported = ' '.join(sorted(DATA_FOR_LANG.keys()))
     parser = argparse.ArgumentParser(description=f'''
 Counts the lines in the code files for the languages processed.
 Supported languages: {supported}.
 ''')
     parser.add_argument('-s', '--sortbylines', action='store_true',
                         help='sort by lines [default: sort by names]')
-    parser.add_argument('-t', '--totals', action='store_true',
-                        help='output only per-language totals not per file')
+    parser.add_argument(
+        '-t', '--totals', action='store_true',
+        help='output only per-language totals not per file (and total '
+        'time)')
     parser.add_argument('-l', '--language', nargs='*',
-                        help='the languages to count [default: all found]')
+                        help='the languages to count [default: all known]')
     exclude = ' '.join(sorted(EXCLUDE))
     parser.add_argument(
         '-e', '--exclude', nargs='*',
-        help='the files and folders to exclude [default: '
-        f'.HIDDEN {exclude}]')
+        help=f'the files and folders to exclude [default: {exclude}]')
     parser.add_argument(
         '-i', '--include', nargs='*',
         help='the files and folders to include (e.g., those without '
-        'suffixes')
+        'suffixes)')
     parser.add_argument(
         'file', default='.', nargs='*',
         help='the files to count or the folders to recursively search '
         '[default: .]')
     config = parser.parse_args()
     if config.language is None:
-        config.language = set(EXTS_FOR_LANG.keys())
+        config.language = set(DATA_FOR_LANG.keys())
     else:
         config.language = set(config.language)
     if config.exclude is None:
@@ -236,30 +212,3 @@ Supported languages: {supported}.
 
 if __name__ == '__main__':
     main()
-
-
-'''
-Can provide config in files (which are overridden by the command line).
-
-On Linux: /etc/clc.uxf ~/.clc.uxf ~/.config/clc.uxr ./.clc.uxf
-
-The file may have any, all, or no items. Here's one that has all the
-options with their defaults:
-
-    uxf 1
-    {
-        <sortbylines> no
-        <totals> no
-        <language> ?
-        <exclude> [<__pycache__> <build> <build.rs> <dist> <setup.py>
-                   <target>]
-        <include> ?
-    }
-
-To change just one or a few, specify only those, e.g.,
-
-    uxf 1
-    {
-        <sortbylines> yes
-    }
-'''
