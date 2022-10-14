@@ -7,10 +7,11 @@
 
 clc.py
 
-src/main.rs
-Cargo.toml
+rs/src/main.rs
+rs/Cargo.toml
 
-clc.cpp
+# TODO SConstruct & SConscript (see ~/app/uxf/cpp)
+cpp/clc.cpp
 
 st.sh
 

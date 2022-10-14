@@ -14,8 +14,7 @@ import time
 FileData = collections.namedtuple('FileData', ('lang', 'filename', 'lines'))
 LangData = collections.namedtuple('LangData', ('name', 'exts'))
 
-EXCLUDE = {'__pycache__', 'build', 'build.rs', 'dist', 'setup.py', 'target',
-           '.git', '.hg'}
+EXCLUDE = {'__pycache__', 'build', 'build.rs', 'dist', 'setup.py', 'target'}
 
 DATA_FOR_LANG = { # Additions here may need additions in lang_for_line()
     'c': LangData('C', {'.h', '.c'}),
@@ -26,7 +25,7 @@ DATA_FOR_LANG = { # Additions here may need additions in lang_for_line()
     'jl': LangData('Julia', {'.jl'}),
     'nim': LangData('Nim', {'.nim'}),
     'pl': LangData('Perl', {'.pl', '.PL'}),
-    'py': LangData('Python', {'.pyw', '.py', '.pxd'}),
+    'py': LangData('Python', {'.pyw', '.py'}),
     'rb': LangData('Ruby', {'.rb'}),
     'rs': LangData('Rust', {'.rs'}),
     'tcl': LangData('Tcl', {'.tcl'}),
@@ -34,11 +33,13 @@ DATA_FOR_LANG = { # Additions here may need additions in lang_for_line()
     }
 
 if sys.platform == 'win32':
-    THIN = '─'
-    THICK = '═'
+    THIN = '-'
+    THICK = '='
+    ELLIPSIS = '...'
 else:
     THIN = '─'
     THICK = '━'
+    ELLIPSIS = '…'
 
 
 def main():
@@ -50,7 +51,7 @@ def main():
     if config.totals:
         display_totals(file_data, time.monotonic() - t)
     else:
-        display_full(file_data, config.sortbylines)
+        display_full(file_data, config.sortbylines, config.maxwidth)
 
 
 def display_totals(file_data, secs):
@@ -69,13 +70,18 @@ def display_totals(file_data, secs):
     print(f'{secs:.3f} sec'.rjust(width))
 
 
-def display_full(file_data, sortbylines):
+def display_full(file_data, sortbylines, maxwidth):
     SIZE = 12
     NWIDTH = SIZE - 1
     width = 0
     for file_datum in file_data:
         if len(file_datum.filename) > width:
             width = len(file_datum.filename)
+            if maxwidth is not None and width > maxwidth:
+                width = maxwidth
+                break
+    third = (width // 3) - 1
+    twothirds = third * 2
     lang = None
     count = subtotal = 0
     for file_datum in sorted(file_data,
@@ -87,8 +93,10 @@ def display_full(file_data, sortbylines):
             lang = file_datum.lang
             name = f' {DATA_FOR_LANG[lang].name} '
             print(name.center(width + SIZE, THICK))
-        print(f'{file_datum.filename:{width}} '
-              f'{file_datum.lines: >{NWIDTH},d}')
+        filename = file_datum.filename
+        if len(filename) > width:
+            filename = filename[:third] + ELLIPSIS + filename[-twothirds:]
+        print(f'{filename:{width}} {file_datum.lines: >{NWIDTH},d}')
         subtotal += file_datum.lines
         count += 1
     if lang is not None:
@@ -159,12 +167,15 @@ def get_filenames(config):
                         filename = os.path.join(root, file)
                         if valid_filename(config, filename):
                             yield filename
-                    # Python-specific optimization not actually needed
-                    for exclude in config.exclude:
-                        try:
-                            dirs.remove(exclude)
-                        except ValueError:
-                            pass
+                    # Python-specific optimizations not actually needed
+                    for dir in dirs:
+                        if len(dir) > 1 and dir.startswith('.'):
+                            dirs.remove(dir)
+                        for exclude in config.exclude:
+                            try:
+                                dirs.remove(exclude)
+                            except ValueError:
+                                pass
 
 
 def valid_filename(config, name):
@@ -175,6 +186,9 @@ def valid_filename(config, name):
         return False
     if set(path.parts) & config.exclude:
         return False
+    for part in path.parts:
+        if len(part) > 1 and part.startswith('.'):
+            return False
     if not path.suffix:
         return False
     for lang in config.language:
@@ -195,10 +209,13 @@ def get_config():
     supported = ' '.join(sorted(DATA_FOR_LANG.keys()))
     parser = argparse.ArgumentParser(description=f'''
 Counts the lines in the code files for the languages processed.
-Supported languages: {supported}.
-''')
+Supported language names: {supported}.
+Ignores . folders.''')
     parser.add_argument('-s', '--sortbylines', action='store_true',
                         help='sort by lines [default: sort by names]')
+    parser.add_argument(
+        '-m', '--maxwidth', type=int,
+        help='max filename width shown [default: unlimited]')
     parser.add_argument(
         '-t', '--totals', action='store_true',
         help='output only per-language totals not per file (and total '
