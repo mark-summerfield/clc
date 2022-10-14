@@ -65,12 +65,12 @@ def display_totals(file_data, secs):
         count = count_for_lang[lang]
         s = ' ' if count == 1 else 's'
         print(f'{DATA_FOR_LANG[lang].name:<{width}} '
-              f'{count:5,d} file{s} {total:10,d} lines')
+              f'{count:7,d} file{s} {total:12,d} lines')
     print(f'{secs:.3f} sec'.rjust(width))
 
 
 def display_full(file_data, sortbylines):
-    SIZE = 11
+    SIZE = 12
     NWIDTH = SIZE - 1
     width = 0
     for file_datum in file_data:
@@ -109,7 +109,7 @@ def display_subtotal(lang, count, subtotal, width, size, nwidth):
     span = width + size
     print(THIN * span)
     s = ' ' if count == 1 else 's'
-    numbers = f'{count:3,d} file{s} {subtotal:{nwidth},d} lines'
+    numbers = f'{count:7,d} file{s} {subtotal:{nwidth},d} lines'
     span -= len(numbers)
     print(f'{lang:<{span}}{numbers}')
 
