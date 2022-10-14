@@ -8,13 +8,17 @@ import concurrent.futures
 import mmap
 import os
 import pathlib
+import shutil
 import sys
 import time
+
+__version__ = '1.0.0'
 
 FileData = collections.namedtuple('FileData', ('lang', 'filename', 'lines'))
 LangData = collections.namedtuple('LangData', ('name', 'exts'))
 
-EXCLUDE = {'__pycache__', 'build', 'build.rs', 'dist', 'setup.py', 'target'}
+EXCLUDE = {'__pycache__', 'build', 'build.rs', 'CVS', 'dist', 'setup.py',
+           'target'} # All .hidden folders are also excluded
 
 DATA_FOR_LANG = { # Additions here may need additions in lang_for_line()
     'c': LangData('C', {'.h', '.c'}),
@@ -24,7 +28,7 @@ DATA_FOR_LANG = { # Additions here may need additions in lang_for_line()
     'java': LangData('Java', {'.java'}),
     'jl': LangData('Julia', {'.jl'}),
     'nim': LangData('Nim', {'.nim'}),
-    'pl': LangData('Perl', {'.pl', '.PL'}),
+    'pl': LangData('Perl', {'.pl', '.pm', '.PL'}),
     'py': LangData('Python', {'.pyw', '.py'}),
     'rb': LangData('Ruby', {'.rb'}),
     'rs': LangData('Rust', {'.rs'}),
@@ -49,12 +53,18 @@ def main():
         file_data = exe.map(count_lines, get_filenames(config))
     file_data = tuple(file_data)
     if config.totals:
-        display_totals(file_data, time.monotonic() - t)
+        display_totals(file_data, config.sortbylines, time.monotonic() - t)
     else:
         display_full(file_data, config.sortbylines, config.maxwidth)
 
 
-def display_totals(file_data, secs):
+def display_totals(file_data, sortbylines, secs):
+    def bylines(pair):
+        return pair[1], pair[0].lower()
+
+    def bynames(pair):
+        return pair[0].lower()
+
     total_for_lang = collections.defaultdict(int)
     count_for_lang = collections.defaultdict(int)
     width = max(len(name) for name in DATA_FOR_LANG.keys()) + 4
@@ -62,7 +72,7 @@ def display_totals(file_data, secs):
         total_for_lang[file_datum.lang] += file_datum.lines
         count_for_lang[file_datum.lang] += 1
     for lang, total in sorted(total_for_lang.items(),
-                              key=lambda pair: (pair[0].lower())):
+                              key=bylines if sortbylines else bynames):
         count = count_for_lang[lang]
         s = ' ' if count == 1 else 's'
         print(f'{DATA_FOR_LANG[lang].name:<{width}} '
@@ -71,15 +81,15 @@ def display_totals(file_data, secs):
 
 
 def display_full(file_data, sortbylines, maxwidth):
+    def bynames(datum):
+        return datum.lang, datum.filename.lower(), datum.lines
+
+    def bylines(datum):
+        return datum.lang, datum.lines, datum.filename.lower()
+
     SIZE = 12
     NWIDTH = SIZE - 1
-    width = 0
-    for file_datum in file_data:
-        if len(file_datum.filename) > width:
-            width = len(file_datum.filename)
-            if maxwidth is not None and width > maxwidth:
-                width = maxwidth
-                break
+    width = get_width(file_data, maxwidth)
     third = (width // 3) - 1
     twothirds = third * 2
     lang = None
@@ -104,12 +114,14 @@ def display_full(file_data, sortbylines, maxwidth):
         print(THICK * (width + SIZE))
 
 
-def bynames(file_datum):
-    return file_datum.lang, file_datum.filename.lower(), file_datum.lines
-
-
-def bylines(file_datum):
-    return file_datum.lang, file_datum.lines, file_datum.filename.lower()
+def get_width(file_data, maxwidth):
+    width = 0
+    for file_datum in file_data:
+        if len(file_datum.filename) > width:
+            width = len(file_datum.filename)
+            if maxwidth is not None and width > maxwidth:
+                return maxwidth
+    return width
 
 
 def display_subtotal(lang, count, subtotal, width, size, nwidth):
@@ -206,30 +218,35 @@ def valid_dirname(config, name):
 
 
 def get_config():
+    width = shutil.get_terminal_size()[0]
     supported = ' '.join(sorted(DATA_FOR_LANG.keys()))
     parser = argparse.ArgumentParser(description=f'''
 Counts the lines in the code files for the languages processed.
 Supported language names: {supported}.
 Ignores . folders.''')
-    parser.add_argument('-s', '--sortbylines', action='store_true',
-                        help='sort by lines [default: sort by names]')
-    parser.add_argument(
-        '-m', '--maxwidth', type=int,
-        help='max filename width shown [default: unlimited]')
-    parser.add_argument(
-        '-t', '--totals', action='store_true',
-        help='output only per-language totals not per file (and total '
-        'time)')
     parser.add_argument('-l', '--language', nargs='*',
                         help='the languages to count [default: all known]')
     exclude = ' '.join(sorted(EXCLUDE))
     parser.add_argument(
         '-e', '--exclude', nargs='*',
-        help=f'the files and folders to exclude [default: {exclude}]')
+        help='the files and folders to exclude [default: .hidden and '
+        f'{exclude}]')
     parser.add_argument(
         '-i', '--include', nargs='*',
         help='the files and folders to include (e.g., those without '
         'suffixes)')
+    parser.add_argument(
+        '-m', '--maxwidth', type=int, default=width,
+        help='max line width to use [default: terminal width or needed '
+        'width if less]')
+    parser.add_argument('-s', '--sortbylines', action='store_true',
+                        help='sort by lines [default: sort by names]')
+    parser.add_argument(
+        '-t', '--totals', action='store_true',
+        help='output only per-language totals not per file (and total '
+        'time) [default: output per-language and per-file totals]')
+    parser.add_argument('-V', '--version', action='version',
+                        version=f'%(prog)s {__version__}')
     parser.add_argument(
         'file', default='.', nargs='*',
         help='the files to count or the folders to recursively search '
@@ -248,6 +265,7 @@ Ignores . folders.''')
         config.file = {os.path.abspath('.')}
     else:
         config.file = {os.path.abspath(file) for file in config.file}
+    config.maxwidth -= 13 # we use this only for the filename part
     return config
 
 
