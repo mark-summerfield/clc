@@ -16,15 +16,17 @@ LangData = collections.namedtuple('LangData', ('name', 'exts'))
 EXCLUDE = {'__pycache__', 'build', 'build.rs', 'dist', 'setup.py', 'target',
            '.git', '.hg'}
 
-DATA_FOR_LANG = {
+DATA_FOR_LANG = { # Additions here may need additions in lang_for_line()
     'c': LangData('C', {'.h', '.c'}),
     'cpp': LangData('C++', {'.hpp', '.hxx', '.cpp', '.cxx'}),
     'd': LangData('D', {'.d'}),
     'go': LangData('Go', {'.go'}),
     'java': LangData('Java', {'.java'}),
-    'julia': LangData('Julia', {'.jl'}),
+    'jl': LangData('Julia', {'.jl'}),
     'nim': LangData('Nim', {'.nim'}),
+    'pl': LangData('Perl', {'.pl', '.PL'}),
     'py': LangData('Python', {'.pyw', '.py', '.pxd'}),
+    'rb': LangData('Ruby', {'.rb'}),
     'rs': LangData('Rust', {'.rs'}),
     'tcl': LangData('Tcl', {'.tcl'}),
     'vala': LangData('Vala', {'.vala'}),
@@ -35,21 +37,21 @@ def main():
     config = get_config()
     t = time.monotonic()
     with concurrent.futures.ProcessPoolExecutor() as exe:
-        results = exe.map(count_lines, get_filenames(config))
-    results = tuple(results)
+        file_data = exe.map(count_lines, get_filenames(config))
+    file_data = tuple(file_data)
     if config.totals:
-        display_totals(results, time.monotonic() - t)
+        display_totals(file_data, time.monotonic() - t)
     else:
-        display_full(results, config.sortbylines)
+        display_full(file_data, config.sortbylines)
 
 
-def display_totals(results, secs):
+def display_totals(file_data, secs):
     total_for_lang = collections.defaultdict(int)
     count_for_lang = collections.defaultdict(int)
     width = max(len(name) for name in DATA_FOR_LANG.keys()) + 4
-    for result in results:
-        total_for_lang[result.lang] += result.lines
-        count_for_lang[result.lang] += 1
+    for file_datum in file_data:
+        total_for_lang[file_datum.lang] += file_datum.lines
+        count_for_lang[file_datum.lang] += 1
     for lang, total in sorted(total_for_lang.items(),
                               key=lambda pair: (pair[0].lower())):
         count = count_for_lang[lang]
@@ -59,37 +61,39 @@ def display_totals(results, secs):
     print(f'{secs:.3f} sec'.rjust(width))
 
 
-def display_full(results, sortbylines):
+def display_full(file_data, sortbylines):
     SIZE = 11
     NWIDTH = SIZE - 1
     width = 0
-    for result in results:
-        if len(result.filename) > width:
-            width = len(result.filename)
+    for file_datum in file_data:
+        if len(file_datum.filename) > width:
+            width = len(file_datum.filename)
     lang = None
     count = subtotal = 0
-    for result in sorted(results, key=bylines if sortbylines else bynames):
-        if lang is None or lang != result.lang:
+    for file_datum in sorted(file_data,
+                             key=bylines if sortbylines else bynames):
+        if lang is None or lang != file_datum.lang:
             if lang is not None:
                 display_subtotal(lang, count, subtotal, width, SIZE, NWIDTH)
                 count = subtotal = 0
-            lang = result.lang
+            lang = file_datum.lang
             name = f' {DATA_FOR_LANG[lang].name} '
             print(name.center(width + SIZE, '━'))
-        print(f'{result.filename:{width}} {result.lines: >{NWIDTH},d}')
-        subtotal += result.lines
+        print(f'{file_datum.filename:{width}} '
+              f'{file_datum.lines: >{NWIDTH},d}')
+        subtotal += file_datum.lines
         count += 1
     if lang is not None:
         display_subtotal(lang, count, subtotal, width, SIZE, NWIDTH)
         print('━' * (width + SIZE))
 
 
-def bynames(result):
-    return result.lang, result.filename.lower(), result.lines
+def bynames(file_datum):
+    return file_datum.lang, file_datum.filename.lower(), file_datum.lines
 
 
-def bylines(result):
-    return result.lang, result.lines, result.filename.lower()
+def bylines(file_datum):
+    return file_datum.lang, file_datum.lines, file_datum.filename.lower()
 
 
 def display_subtotal(lang, count, subtotal, width, size, nwidth):
@@ -108,12 +112,24 @@ def count_lines(name):
         return FileData(lang, name, 0)
     with open(name, 'rb') as file:
         if lang is None:
-            line = file.readline()
-            if line.startswith(b'#!') and b'python' in line:
-                lang = 'py'
+            lang = lang_for_line(file.readline())
             file.seek(0)
         with mmap.mmap(file.fileno(), 0, prot=mmap.PROT_READ) as mm:
             return FileData(lang, name, mm[:].count(b'\n'))
+
+
+def lang_for_line(line):
+    if line.startswith(b'#!'):
+        if b'julia' in line:
+            return 'jl'
+        if b'perl' in line:
+            return 'pl'
+        if b'python' in line:
+            return 'py'
+        if b'ruby' in line:
+            return 'rb'
+        if b'tcl' in line:
+            return 'tcl'
 
 
 def lang_for_name(name):
