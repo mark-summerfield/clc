@@ -5,8 +5,7 @@ use state::Storage;
 use std::collections::{HashMap, HashSet};
 
 pub static EXCLUDE: Storage<Vec<&str>> = Storage::new();
-pub static DATA_FOR_LANG: Storage<HashMap<&str, LangData>> =
-    Storage::new();
+pub static DATA_FOR_LANG: Storage<HashMap<&str, LangData>> = Storage::new();
 
 pub fn initialize() {
     EXCLUDE.set(vec![
