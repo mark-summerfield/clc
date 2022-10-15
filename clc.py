@@ -52,13 +52,13 @@ def main():
     with concurrent.futures.ProcessPoolExecutor() as exe:
         file_data = exe.map(count_lines, get_filenames(config))
     file_data = tuple(file_data)
-    if config.totals:
-        display_totals(file_data, config.sortbylines, time.monotonic() - t)
+    if config.summary:
+        display_summary(file_data, config.sortbylines, time.monotonic() - t)
     else:
         display_full(file_data, config.sortbylines, config.maxwidth)
 
 
-def display_totals(file_data, sortbylines, secs):
+def display_summary(file_data, sortbylines, secs):
     def bylines(pair):
         return pair[1], pair[0].lower()
 
@@ -221,11 +221,15 @@ def get_config():
     width = shutil.get_terminal_size()[0]
     supported = ' '.join(sorted(DATA_FOR_LANG.keys()))
     parser = argparse.ArgumentParser(description=f'''
-Counts the lines in the code files for the languages processed.
-Supported language names: {supported}.
-Ignores . folders.''')
+Counts the lines in the code files for the languages processed (ignoring .
+folders).
+Supported language names: {supported}.''')
     parser.add_argument('-l', '--language', nargs='*',
                         help='the languages to count [default: all known]')
+    parser.add_argument(
+        '-L', '--skiplanguage', nargs='*',
+        help='the languages not to count, .e.g., "-L d cpp" with no "-l" '
+        'means count all languages except D and C++ [default: none]')
     exclude = ' '.join(sorted(EXCLUDE))
     parser.add_argument(
         '-e', '--exclude', nargs='*',
@@ -233,18 +237,17 @@ Ignores . folders.''')
         f'{exclude}]')
     parser.add_argument(
         '-i', '--include', nargs='*',
-        help='the files and folders to include (e.g., those without '
-        'suffixes)')
+        help='the files to include (e.g., those without suffixes)')
     parser.add_argument(
         '-m', '--maxwidth', type=int, default=width,
-        help='max line width to use [default: terminal width or needed '
-        'width if less]')
+        help='max line width to use (e.g., for redirected output) '
+        '[default: terminal width or needed width if less]')
     parser.add_argument('-s', '--sortbylines', action='store_true',
                         help='sort by lines [default: sort by names]')
     parser.add_argument(
-        '-t', '--totals', action='store_true',
-        help='output only per-language totals not per file (and total '
-        'time) [default: output per-language and per-file totals]')
+        '-S', '--summary', action='store_true',
+        help='output per-language totals and total time [default: output '
+        'per-language and per-file totals]')
     parser.add_argument('-V', '--version', action='version',
                         version=f'%(prog)s {__version__}')
     parser.add_argument(
@@ -256,6 +259,8 @@ Ignores . folders.''')
         config.language = set(DATA_FOR_LANG.keys())
     else:
         config.language = set(config.language)
+    if config.skiplanguage is not None:
+        config.language -= set(config.skiplanguage)
     if config.exclude is None:
         config.exclude = set(EXCLUDE)
     else:
