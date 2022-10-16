@@ -6,8 +6,8 @@
 # TODO clc.cpp multi-threaded
 
 rs/src/main.rs
-rs/src/cli.rs
 rs/src/config.rs
+rs/src/cli.rs
 rs/src/consts.rs
 rs/Cargo.toml
 

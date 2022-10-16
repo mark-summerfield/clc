@@ -3,7 +3,8 @@
 
 use crate::cli::Cli;
 use crate::consts;
-use std::collections::HashSet;
+use clap::Parser;
+use std::{collections::HashSet, process};
 
 #[derive(Debug)]
 pub struct Config {
@@ -17,52 +18,34 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new_from_cli(cli: Cli) -> Self {
-        let mut langs = HashSet::new();
-        if let Some(language) = cli.language {
-            for lang in language {
-                langs.insert(lang);
-            }
-        } else {
-            // If none specified use all the known languages
-            for lang in consts::DATA_FOR_LANG.get().keys() {
-                langs.insert(lang.to_string());
-            }
-        }
-        if let Some(language) = cli.skiplanguage {
-            for lang in language {
-                langs.remove(&lang);
-            }
-        }
-        let mut exclude = HashSet::new();
+    pub fn new() -> Self {
+        let cli = Cli::parse();
+        let langs = get_langs(cli.language, cli.skiplanguage);
+        let mut exclude = HashSet::from_iter(
+            consts::EXCLUDE.get().iter().map(|s| s.to_string()),
+        );
         if let Some(excl) = cli.exclude {
             for name in excl {
                 exclude.insert(name);
             }
         }
-        let mut include = HashSet::new();
-        if let Some(incl) = cli.include {
-            for name in incl {
-                include.insert(name);
-            }
-        }
+        let include = if let Some(incl) = cli.include {
+            HashSet::from_iter(incl)
+        } else {
+            HashSet::new()
+        };
         let maxwidth = if let Some(maxwidth) = cli.maxwidth {
             maxwidth
+        } else if let Some((width, _)) = term_size::dimensions() {
+            width
         } else {
-            if let Some((width, _)) = term_size::dimensions() {
-                width
-            } else {
-                80
-            }
+            80
         };
-        let mut files = HashSet::new();
-        if let Some(file) = cli.file {
-            for name in file {
-                files.insert(name);
-            }
+        let files = if let Some(file) = cli.file {
+            HashSet::from_iter(file)
         } else {
-            files.insert(".".to_string());
-        }
+            HashSet::from([".".to_string()])
+        };
         Self {
             langs,
             exclude,
@@ -73,4 +56,45 @@ impl Config {
             files,
         }
     }
+}
+
+fn get_langs(
+    language: Option<Vec<String>>,
+    skiplanguage: Option<Vec<String>>,
+) -> HashSet<String> {
+    let default_langs = HashSet::from_iter(
+        consts::DATA_FOR_LANG.get().keys().map(|s| s.to_string()),
+    );
+    let mut langs = if let Some(language) = language {
+        HashSet::from_iter(language)
+    } else {
+        default_langs.clone()
+    };
+    if let Some(language) = skiplanguage {
+        for lang in language {
+            langs.remove(&lang);
+        }
+    }
+    if langs.is_empty() {
+        fatal("no languages to count");
+    }
+    let lang_names = Vec::from_iter(langs.iter().map(|s| s.to_string()));
+    let mut bad_names = vec![];
+    for lang in &lang_names {
+        if !default_langs.contains(lang) {
+            langs.remove(lang);
+            bad_names.push(lang.to_string());
+        }
+    }
+    if !bad_names.is_empty() {
+        let s = if bad_names.len() == 1 { "" } else { "s" };
+        let names = bad_names.join(" ");
+        eprintln!("ignoring unrecognized language{s}: {names}");
+    }
+    langs
+}
+
+fn fatal(message: &str) {
+    eprintln!("error: {message}");
+    process::exit(3);
 }

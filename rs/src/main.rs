@@ -5,13 +5,10 @@ mod cli;
 mod config;
 mod consts;
 
-use clap::Parser;
-use cli::Cli;
 use config::Config;
 
 fn main() {
-    consts::initialize();
-    let cli = Cli::parse();
-    let config = Config::new_from_cli(cli);
+    consts::initialize(); // NOTE must be first
+    let config = Config::new();
     dbg!(config);
 }

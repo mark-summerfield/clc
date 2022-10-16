@@ -17,54 +17,27 @@ pub fn initialize() {
         "setup.py",
         "target",
     ]);
-    let mut m = HashMap::new();
-    let mut exts = HashSet::new();
-    exts.insert(".h");
-    exts.insert(".c");
-    m.insert("c", LangData::new("C", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".hpp");
-    exts.insert(".hxx");
-    exts.insert(".cpp");
-    exts.insert(".cxx");
-    m.insert("cpp", LangData::new("C++", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".d");
-    m.insert("d", LangData::new("D", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".go");
-    m.insert("go", LangData::new("Go", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".java");
-    m.insert("java", LangData::new("Java", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".jl");
-    m.insert("jl", LangData::new("Julia", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".nim");
-    m.insert("nim", LangData::new("Nim", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".pl");
-    exts.insert(".PL");
-    exts.insert(".pm");
-    m.insert("pl", LangData::new("Perl", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".py");
-    exts.insert(".pyw");
-    m.insert("py", LangData::new("Python", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".rb");
-    m.insert("rb", LangData::new("Ruby", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".rs");
-    m.insert("rs", LangData::new("Rust", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".tcl");
-    m.insert("tcl", LangData::new("Tcl", exts));
-    let mut exts = HashSet::new();
-    exts.insert(".vala");
-    m.insert("vala", LangData::new("Vala", exts));
-    DATA_FOR_LANG.set(m);
+    DATA_FOR_LANG.set(HashMap::from([
+        ("c", LangData::new("C", HashSet::from([".h", ".c"]))),
+        (
+            "cpp",
+            LangData::new(
+                "C++",
+                HashSet::from([".hpp", ".hxx", ".cpp", ".cxx"]),
+            ),
+        ),
+        ("d", LangData::new("D", HashSet::from([".d"]))),
+        ("go", LangData::new("Go", HashSet::from([".go"]))),
+        ("java", LangData::new("Java", HashSet::from([".java"]))),
+        ("jl", LangData::new("Julia", HashSet::from([".jl"]))),
+        ("nim", LangData::new("Nim", HashSet::from([".nim"]))),
+        ("pl", LangData::new("Perl", HashSet::from([".pl", ".PL", ".pm"]))),
+        ("py", LangData::new("Python", HashSet::from([".py", ".pyw"]))),
+        ("rb", LangData::new("Ruby", HashSet::from([".rb"]))),
+        ("rs", LangData::new("Rust", HashSet::from([".rs"]))),
+        ("tcl", LangData::new("Tcl", HashSet::from([".tcl"]))),
+        ("vala", LangData::new("Vala", HashSet::from([".vala"]))),
+    ]));
 }
 
 #[derive(Debug)]
