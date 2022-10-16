@@ -2,6 +2,9 @@
 // License: GPLv3
 
 use clap::Parser;
+use std::ops::Range;
+
+const MAXSIZE_RANGE: Range<usize> = 20..32767;
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -9,7 +12,7 @@ use clap::Parser;
     about = "Counts the lines in the code files for the languages \
 processed (excluding . folders).
 
-Supported languages names: c cpp d go java jl nim pl py rb rs tcl vala."
+Supported language names: c cpp d go java jl nim pl py rb rs tcl vala."
 )]
 pub struct Cli {
     /// Languages to count [default: all known]
@@ -33,7 +36,7 @@ pub struct Cli {
 
     /// Maximum line width to use (e.g., for redirected output) [default:
     /// terminal width or needed width if less]
-    #[arg(short, long)]
+    #[arg(short, long, value_parser=maxsize_in_range)]
     pub maxwidth: Option<usize>,
 
     /// Sort by lines [the default is to sort by names]
@@ -47,4 +50,17 @@ pub struct Cli {
 
     /// Files to count or the folders to recursively search [default: .]
     pub file: Option<Vec<String>>,
+}
+
+fn maxsize_in_range(s: &str) -> Result<usize, String> {
+    let maxsize: usize =
+        s.parse().map_err(|_| format!("invalid maxsize: {:?}", s))?;
+    if MAXSIZE_RANGE.contains(&maxsize) {
+        Ok(maxsize as usize)
+    } else {
+        Err(format!(
+            "maxsize must be in range {}-{}",
+            MAXSIZE_RANGE.start, MAXSIZE_RANGE.end
+        ))
+    }
 }

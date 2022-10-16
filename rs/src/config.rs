@@ -25,9 +25,7 @@ impl Config {
             consts::EXCLUDE.get().iter().map(|s| s.to_string()),
         );
         if let Some(excl) = cli.exclude {
-            for name in excl {
-                exclude.insert(name);
-            }
+            exclude.extend(excl);
         }
         let include = if let Some(incl) = cli.include {
             HashSet::from_iter(incl)
@@ -35,7 +33,7 @@ impl Config {
             HashSet::new()
         };
         let maxwidth = if let Some(maxwidth) = cli.maxwidth {
-            maxwidth
+            maxwidth // Always in range 20..32767
         } else if let Some((width, _)) = term_size::dimensions() {
             width
         } else {
