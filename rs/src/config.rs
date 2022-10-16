@@ -3,8 +3,8 @@
 
 use crate::cli::Cli;
 use crate::consts;
-use clap::Parser;
-use std::{collections::HashSet, process};
+use clap::{error, CommandFactory, Parser};
+use std::collections::HashSet;
 
 #[derive(Debug)]
 pub struct Config {
@@ -74,7 +74,9 @@ fn get_langs(
         }
     }
     if langs.is_empty() {
-        fatal("no languages to count");
+        let mut cmd = Cli::command();
+        cmd.error(error::ErrorKind::TooFewValues, "no languages to count")
+            .exit();
     }
     let lang_names = Vec::from_iter(langs.iter().map(|s| s.to_string()));
     let mut bad_names = vec![];
@@ -90,9 +92,4 @@ fn get_langs(
         eprintln!("ignoring unrecognized language{s}: {names}");
     }
     langs
-}
-
-fn fatal(message: &str) {
-    eprintln!("error: {message}");
-    process::exit(3);
 }
