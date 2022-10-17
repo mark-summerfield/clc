@@ -42,8 +42,8 @@ pub fn initialize() {
 
 #[derive(Debug)]
 pub struct LangData<'a> {
-    name: &'a str,
-    exts: HashSet<&'a str>,
+    pub name: &'a str,
+    pub exts: HashSet<&'a str>,
 }
 
 impl<'a> LangData<'a> {

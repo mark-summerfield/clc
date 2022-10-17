@@ -11,6 +11,7 @@ lto = true
 [dependencies]
 state = "^0.5"
 term_size = "^0.3"
+walkdir = "^2"
 
 [dependencies.clap]
 version = "^4"
