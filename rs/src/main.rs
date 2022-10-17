@@ -26,19 +26,19 @@ fn process_one(filename: &Path, config: &Config) {
 
 fn process(config: Config) {
     for name in &config.files {
-        let filename = abspath(&name);
+        let filename = abspath(name);
         if filename.is_file() {
             if is_valid_file(&filename, &config) {
                 process_one(&filename, &config);
             }
         } else if filename.is_dir() {
             let walker = WalkDir::new(&filename).into_iter();
-            for entry in walker.filter_entry(|e| is_valid_entry(e, &config))
+            for entry in walker
+                .filter_entry(|e| is_valid_entry(e, &config))
+                .flatten()
             {
-                if let Ok(entry) = entry {
-                    if !entry.file_type().is_dir() {
-                        process_one(entry.path(), &config);
-                    }
+                if !entry.file_type().is_dir() {
+                    process_one(entry.path(), &config);
                 }
             }
         }
@@ -66,11 +66,7 @@ fn is_valid_file(filename: &Path, config: &Config) -> bool {
                 .components()
                 .filter_map(|c| match c {
                     Component::Normal(s) => {
-                        if let Some(s) = s.to_str() {
-                            Some(s.to_string())
-                        } else {
-                            None
-                        }
+                        s.to_str().map(|s| s.to_string())
                     }
                     _ => None,
                 })
@@ -121,7 +117,6 @@ fn abspath(name: &str) -> PathBuf {
     if filename.is_absolute() {
         filename
     } else {
-        let filename = filename.canonicalize().unwrap_or(filename);
-        filename
+        filename.canonicalize().unwrap_or(filename)
     }
 }
