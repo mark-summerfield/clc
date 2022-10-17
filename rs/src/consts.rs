@@ -18,25 +18,25 @@ pub fn initialize() {
         "target",
     ]);
     DATA_FOR_LANG.set(HashMap::from([
-        ("c", LangData::new("C", HashSet::from([".h", ".c"]))),
+        ("c", LangData::new("C", HashSet::from(["h", "c"]))),
         (
             "cpp",
             LangData::new(
                 "C++",
-                HashSet::from([".hpp", ".hxx", ".cpp", ".cxx"]),
+                HashSet::from(["hpp", "hxx", "cpp", "cxx"]),
             ),
         ),
-        ("d", LangData::new("D", HashSet::from([".d"]))),
-        ("go", LangData::new("Go", HashSet::from([".go"]))),
-        ("java", LangData::new("Java", HashSet::from([".java"]))),
-        ("jl", LangData::new("Julia", HashSet::from([".jl"]))),
-        ("nim", LangData::new("Nim", HashSet::from([".nim"]))),
-        ("pl", LangData::new("Perl", HashSet::from([".pl", ".PL", ".pm"]))),
-        ("py", LangData::new("Python", HashSet::from([".py", ".pyw"]))),
-        ("rb", LangData::new("Ruby", HashSet::from([".rb"]))),
-        ("rs", LangData::new("Rust", HashSet::from([".rs"]))),
-        ("tcl", LangData::new("Tcl", HashSet::from([".tcl"]))),
-        ("vala", LangData::new("Vala", HashSet::from([".vala"]))),
+        ("d", LangData::new("D", HashSet::from(["d"]))),
+        ("go", LangData::new("Go", HashSet::from(["go"]))),
+        ("java", LangData::new("Java", HashSet::from(["java"]))),
+        ("jl", LangData::new("Julia", HashSet::from(["jl"]))),
+        ("nim", LangData::new("Nim", HashSet::from(["nim"]))),
+        ("pl", LangData::new("Perl", HashSet::from(["pl", "PL", "pm"]))),
+        ("py", LangData::new("Python", HashSet::from(["py", "pyw"]))),
+        ("rb", LangData::new("Ruby", HashSet::from(["rb"]))),
+        ("rs", LangData::new("Rust", HashSet::from(["rs"]))),
+        ("tcl", LangData::new("Tcl", HashSet::from(["tcl"]))),
+        ("vala", LangData::new("Vala", HashSet::from(["vala"]))),
     ]));
 }
 

@@ -20,6 +20,10 @@ fn main() {
     process(config);
 }
 
+fn process_one(filename: &Path, config: &Config) {
+    println!("process_one: {filename:?}");
+}
+
 fn process(config: Config) {
     for name in &config.files {
         let filename = abspath(&name);
@@ -28,7 +32,7 @@ fn process(config: Config) {
                 process_one(&filename, &config);
             }
         } else if filename.is_dir() {
-            let walker = WalkDir::new(&name).into_iter();
+            let walker = WalkDir::new(&filename).into_iter();
             for entry in walker.filter_entry(|e| is_valid_entry(e, &config))
             {
                 if let Ok(entry) = entry {
@@ -41,19 +45,11 @@ fn process(config: Config) {
     }
 }
 
-fn process_one(filename: &Path, config: &Config) {
-    println!("process_one: {filename:?}");
-}
-
 fn is_valid_entry(entry: &DirEntry, config: &Config) -> bool {
-    if let Some(filename) = entry.file_name().to_str() {
-        if entry.file_type().is_dir() {
-            is_valid_dir(entry.path(), config)
-        } else {
-            is_valid_file(entry.path(), config)
-        }
+    if entry.file_type().is_dir() {
+        is_valid_dir(entry.path(), config)
     } else {
-        true
+        is_valid_file(entry.path(), config)
     }
 }
 
@@ -89,7 +85,6 @@ fn is_valid_file(filename: &Path, config: &Config) -> bool {
             }
             if let Some((_, ext)) = name.rsplit_once('.') {
                 let data_for_lang = consts::DATA_FOR_LANG.get();
-                // TODO FIXME
                 for lang in &config.langs {
                     if data_for_lang[lang.as_str()].exts.contains(ext) {
                         return true;
@@ -104,7 +99,20 @@ fn is_valid_file(filename: &Path, config: &Config) -> bool {
 }
 
 fn is_valid_dir(dirname: &Path, config: &Config) -> bool {
-    // TODO
+    if let Some(name) = dirname.file_name() {
+        if let Some(name) = name.to_str() {
+            if name.len() > 1 && name.starts_with('.') {
+                return false;
+            }
+        }
+    }
+    if let Some(parent) = dirname.parent() {
+        if let Some(name) = parent.to_str() {
+            if config.exclude.contains(name) {
+                return false;
+            }
+        }
+    }
     true
 }
 
