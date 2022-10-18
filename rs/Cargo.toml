@@ -11,6 +11,7 @@ lto = true
 [dependencies]
 anyhow = "^1"
 memmap2 = "^0.5"
+rayon = "^1.5"
 state = "^0.5"
 term_size = "^0.3"
 walkdir = "^2.3"

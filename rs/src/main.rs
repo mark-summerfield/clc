@@ -8,6 +8,7 @@ mod valid;
 
 use anyhow::Result;
 use config::Config;
+use rayon::prelude::*;
 use std::{
     fs::File,
     io::Read,
@@ -33,7 +34,7 @@ fn process_one<'a>(
         (count, lang)
     } else {
         let mut text = String::new();
-        file.read_to_string(&mut text);
+        file.read_to_string(&mut text)?;
         let count = text.bytes().filter(|&b| b == b'\n').count();
         let lang = if text.starts_with("#!") {
             if let Some(i) = text.find('\n') {
@@ -52,13 +53,24 @@ fn process_one<'a>(
 fn process(config: Config) {
     let t = Instant::now();
     let mut results = vec![];
+    let filenames = get_filenames(&config);
+    // TODO try to use rayon, e.g., 16 tasks with 16 results vecs then
+    // combine for output
+    for filename in filenames {
+        if let Ok(file_data) = process_one(&filename, &config) {
+            results.push(file_data);
+        }
+    }
+    output(results, config, t);
+}
+
+fn get_filenames(config: &Config) -> Vec<PathBuf> {
+    let mut filenames: Vec<PathBuf> = vec![]; // TODO initial capacity 1000
     for name in &config.files {
         let filename = abspath(name);
         if filename.is_file() {
             if valid::is_valid_file(&filename, &config) {
-                if let Ok(file_data) = process_one(&filename, &config) {
-                    results.push(file_data);
-                }
+                filenames.push(filename);
             }
         } else if filename.is_dir() {
             for entry in WalkDir::new(&filename)
@@ -67,16 +79,12 @@ fn process(config: Config) {
                 .flatten()
             {
                 if !entry.file_type().is_dir() {
-                    if let Ok(file_data) =
-                        process_one(entry.path(), &config)
-                    {
-                        results.push(file_data);
-                    }
+                    filenames.push(entry.into_path());
                 }
             }
         }
     }
-    output(results, config, t);
+    filenames
 }
 
 fn abspath(name: &str) -> PathBuf {
