@@ -60,7 +60,7 @@ fn process_one<'a>(
 fn process(config: &Config) -> Vec<FileData> {
     let mut results = vec![];
     let filenames = get_filenames(config);
-    for filename in filenames {
+    for filename in filenames { // TODO use rayon .par_iter()
         if let Ok(file_data) = process_one(&filename, config) {
             results.push(file_data);
         }
@@ -69,7 +69,7 @@ fn process(config: &Config) -> Vec<FileData> {
 }
 
 fn get_filenames(config: &Config) -> Vec<PathBuf> {
-    let mut filenames: Vec<PathBuf> = vec![]; // TODO initial capacity 1000
+    let mut filenames: Vec<PathBuf> = Vec::with_capacity(1000);
     for name in &config.files {
         let filename = abspath(name);
         if filename.is_file() {
