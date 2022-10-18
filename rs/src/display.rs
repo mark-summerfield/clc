@@ -4,8 +4,8 @@
 use crate::config::Config;
 use crate::consts;
 use crate::FileData;
+use num_format::{SystemLocale, ToFormattedString};
 use std::{cmp::Ordering, collections::HashMap, time::Instant};
-use num_format::{ToFormattedString,SystemLocale};
 
 type NForLang = HashMap<String, usize>;
 
@@ -18,17 +18,20 @@ pub fn display_summary(results: Vec<FileData>, config: Config, t: Instant) {
     for (lang, total) in totals {
         if let Some(count) = count_for_lang.get(lang) {
             let s = if *count == 1 { ' ' } else { 's' };
-            if let Some(datum) = data_for_lang.get(&lang) {
+            if let Some(lang_data) = data_for_lang.get(&lang) {
                 let count = count.to_formatted_string(&locale);
                 let total = total.to_formatted_string(&locale);
-                let name = datum.name;
+                let name = lang_data.name;
                 println!(
                     "{name:width$} {count:>7} file{s} {total:>12} lines"
                 );
             }
         }
     }
-    println!("{:.3} sec", t.elapsed().as_secs_f32());
+    let secs = t.elapsed().as_secs_f32();
+    if secs > 0.1 {
+        println!("{secs:.3} sec");
+    }
 }
 
 pub fn display_full(results: Vec<FileData>, config: Config) {
@@ -88,9 +91,9 @@ fn get_sorted_totals(
             alang
                 .to_lowercase()
                 .partial_cmp(&blang.to_lowercase())
-                .unwrap_or(
-                    alines.partial_cmp(blines).unwrap_or(Ordering::Equal),
-                )
+                .unwrap_or_else(|| {
+                    alines.partial_cmp(blines).unwrap_or(Ordering::Equal)
+                })
         });
     }
     totals

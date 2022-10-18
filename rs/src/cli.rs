@@ -43,8 +43,8 @@ pub struct Cli {
     #[arg(short, long)]
     pub sortbylines: bool,
 
-    /// Summary: output per-language totals and total time [the default is
-    /// to output per-language and per-file totals]
+    /// Summary: output per-language totals and total time if > 0.1 sec
+    /// [the default is to output per-language and per-file totals]
     #[arg(short = 'S', long)]
     pub summary: bool,
 

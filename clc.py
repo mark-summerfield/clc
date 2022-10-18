@@ -77,7 +77,8 @@ def display_summary(file_data, sortbylines, secs):
         s = ' ' if count == 1 else 's'
         print(f'{DATA_FOR_LANG[lang].name:<{width}} '
               f'{count:7,d} file{s} {total:12,d} lines')
-    print(f'{secs:.3f} sec'.rjust(width))
+    if secs > 0.1:
+        print(f'{secs:.3f} sec'.rjust(width))
 
 
 def display_full(file_data, sortbylines, maxwidth):
@@ -246,8 +247,8 @@ Supported language names: {supported}.''')
                         help='sort by lines [default: sort by names]')
     parser.add_argument(
         '-S', '--summary', action='store_true',
-        help='output per-language totals and total time [default: output '
-        'per-language and per-file totals]')
+        help='output per-language totals and total time if > 0.1 sec '
+        '[default: output per-language and per-file totals]')
     parser.add_argument('-V', '--version', action='version',
                         version=f'%(prog)s {__version__}')
     parser.add_argument(

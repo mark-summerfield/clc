@@ -25,7 +25,7 @@ fn main() {
     let filenames = get_filenames(&config);
     let results = filenames
         .par_iter()
-        .filter_map(|filename| process_one(&filename, &config).ok())
+        .filter_map(|filename| process_one(filename).ok())
         .collect();
     if config.summary {
         display::display_summary(results, config, t);
@@ -34,10 +34,7 @@ fn main() {
     }
 }
 
-fn process_one<'a>(
-    filename: &'a Path,
-    config: &'a Config,
-) -> Result<FileData> {
+fn process_one(filename: &Path) -> Result<FileData> {
     let mut file = File::open(&filename)?;
     let (count, lang) = if let Some(lang) = lang_for_name(filename) {
         let mmap = unsafe { memmap2::Mmap::map(&file)? };
@@ -62,7 +59,7 @@ fn process_one<'a>(
 }
 
 fn get_filenames(config: &Config) -> Vec<PathBuf> {
-    let mut filenames: Vec<PathBuf> = Vec::with_capacity(1000);
+    let mut filenames = Vec::with_capacity(1000);
     for name in &config.files {
         let filename = abspath(name);
         if filename.is_file() {
@@ -72,7 +69,7 @@ fn get_filenames(config: &Config) -> Vec<PathBuf> {
         } else if filename.is_dir() {
             for entry in WalkDir::new(&filename)
                 .into_iter()
-                .filter_entry(|e| valid::is_valid_entry(e, &config))
+                .filter_entry(|e| valid::is_valid_entry(e, config))
                 .flatten()
             {
                 if !entry.file_type().is_dir() {
