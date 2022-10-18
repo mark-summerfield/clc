@@ -6,6 +6,7 @@
 
 rs/src/main.rs
 rs/src/valid.rs
+rs/src/display.rs
 rs/src/config.rs
 rs/src/cli.rs
 rs/src/consts.rs

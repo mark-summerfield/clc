@@ -11,9 +11,9 @@ use walkdir::DirEntry;
 
 pub fn is_valid_entry(entry: &DirEntry, config: &Config) -> bool {
     if entry.file_type().is_dir() {
-        is_valid_dir(&entry.path(), config)
+        is_valid_dir(entry.path(), config)
     } else {
-        is_valid_file(&entry.path(), config)
+        is_valid_file(entry.path(), config)
     }
 }
 

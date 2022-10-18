@@ -4,6 +4,7 @@
 mod cli;
 mod config;
 mod consts;
+mod display;
 mod valid;
 
 use anyhow::Result;
@@ -20,7 +21,13 @@ use walkdir::WalkDir;
 fn main() {
     consts::initialize(); // NOTE must be first
     let config = Config::new();
-    process(config);
+    let t = Instant::now();
+    let results = process(&config);
+    if config.summary {
+        display::display_summary(results, config, t);
+    } else {
+        display::display_full(results, config);
+    }
 }
 
 fn process_one<'a>(
@@ -28,7 +35,7 @@ fn process_one<'a>(
     config: &'a Config,
 ) -> Result<FileData> {
     let mut file = File::open(&filename)?;
-    let (count, lang) = if let Some(lang) = lang_for_name(&filename) {
+    let (count, lang) = if let Some(lang) = lang_for_name(filename) {
         let mmap = unsafe { memmap2::Mmap::map(&file)? };
         let count = mmap.iter().filter(|&b| *b == b'\n').count();
         (count, lang)
@@ -50,18 +57,15 @@ fn process_one<'a>(
     Ok(FileData::new(lang, filename, count))
 }
 
-fn process(config: Config) {
-    let t = Instant::now();
+fn process(config: &Config) -> Vec<FileData> {
     let mut results = vec![];
-    let filenames = get_filenames(&config);
-    // TODO try to use rayon, e.g., 16 tasks with 16 results vecs then
-    // combine for output
+    let filenames = get_filenames(config);
     for filename in filenames {
-        if let Ok(file_data) = process_one(&filename, &config) {
+        if let Ok(file_data) = process_one(&filename, config) {
             results.push(file_data);
         }
     }
-    output(results, config, t);
+    results
 }
 
 fn get_filenames(config: &Config) -> Vec<PathBuf> {
@@ -69,7 +73,7 @@ fn get_filenames(config: &Config) -> Vec<PathBuf> {
     for name in &config.files {
         let filename = abspath(name);
         if filename.is_file() {
-            if valid::is_valid_file(&filename, &config) {
+            if valid::is_valid_file(&filename, config) {
                 filenames.push(filename);
             }
         } else if filename.is_dir() {
@@ -125,13 +129,8 @@ fn lang_for_line(line: &str) -> &str {
     }
 }
 
-fn output(results: Vec<FileData>, config: Config, t: Instant) {
-    dbg!(results); // TODO sort etc.
-    println!("{:0.3} secs", t.elapsed().as_secs()); // TODO fix format
-}
-
 #[derive(Debug)]
-struct FileData {
+pub struct FileData {
     pub lang: String,
     pub filename: String,
     pub lines: usize,
