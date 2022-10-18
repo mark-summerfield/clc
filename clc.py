@@ -67,7 +67,7 @@ def display_summary(file_data, sortbylines, secs):
 
     total_for_lang = collections.defaultdict(int)
     count_for_lang = collections.defaultdict(int)
-    width = max(len(name) for name in DATA_FOR_LANG.keys()) + 4
+    width = max(len(value.name) for value in DATA_FOR_LANG.values())
     for file_datum in file_data:
         total_for_lang[file_datum.lang] += file_datum.lines
         count_for_lang[file_datum.lang] += 1

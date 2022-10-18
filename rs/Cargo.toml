@@ -11,6 +11,7 @@ lto = true
 [dependencies]
 anyhow = "^1"
 memmap2 = "^0.5"
+num-format = { version = "0.4.3", features = ["with-system-locale"] }
 rayon = "^1.5"
 state = "^0.5"
 term_size = "^0.3"
