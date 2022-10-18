@@ -22,7 +22,11 @@ fn main() {
     consts::initialize(); // NOTE must be first
     let config = Config::new();
     let t = Instant::now();
-    let results = process(&config);
+    let filenames = get_filenames(&config);
+    let results = filenames
+        .par_iter()
+        .filter_map(|filename| process_one(&filename, &config).ok())
+        .collect();
     if config.summary {
         display::display_summary(results, config, t);
     } else {
@@ -55,17 +59,6 @@ fn process_one<'a>(
         (count, lang.to_string())
     };
     Ok(FileData::new(lang, filename, count))
-}
-
-fn process(config: &Config) -> Vec<FileData> {
-    let mut results = vec![];
-    let filenames = get_filenames(config);
-    for filename in filenames { // TODO use rayon .par_iter()
-        if let Ok(file_data) = process_one(&filename, config) {
-            results.push(file_data);
-        }
-    }
-    results
 }
 
 fn get_filenames(config: &Config) -> Vec<PathBuf> {
