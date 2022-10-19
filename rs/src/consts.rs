@@ -4,6 +4,9 @@
 use state::Storage;
 use std::collections::{HashMap, HashSet};
 
+pub const FILE_COUNT_WIDTH: usize = 7;
+pub const LINE_COUNT_WIDTH: usize = 11;
+
 pub static EXCLUDE: Storage<Vec<&str>> = Storage::new();
 pub static DATA_FOR_LANG: Storage<HashMap<&str, LangData>> = Storage::new();
 
@@ -40,14 +43,18 @@ pub fn initialize() {
     ]));
 }
 
-#[derive(Debug)]
-pub struct LangData<'a> {
-    pub name: &'a str,
-    pub exts: HashSet<&'a str>,
+#[derive(Clone, Debug)]
+pub struct LangData {
+    pub name: String,
+    pub exts: HashSet<String>,
 }
 
-impl<'a> LangData<'a> {
-    pub fn new(name: &'a str, exts: HashSet<&'a str>) -> Self {
-        Self { name, exts }
+impl LangData {
+    pub fn new(name: &str, exts: HashSet<&str>) -> Self {
+        let mut owned_exts: HashSet<String> = HashSet::new();
+        for ext in exts {
+            owned_exts.insert(ext.to_string());
+        }
+        Self { name: name.to_string(), exts: owned_exts }
     }
 }

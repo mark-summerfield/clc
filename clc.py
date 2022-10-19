@@ -93,31 +93,31 @@ def display_full(file_data, sortbylines, maxwidth):
     def bylines(datum):
         return datum.lang, datum.lines, datum.filename.lower()
 
-    FILENAME_WIDTH = get_width(file_data, maxwidth)
-    ROW_WIDTH = FILENAME_WIDTH + 1 + LINE_COUNT_WIDTH
-    THIRD = (FILENAME_WIDTH // 3) - 1
-    TWO_THIRDS = THIRD * 2
+    filename_width = get_width(file_data, maxwidth)
+    row_width = filename_width + 1 + LINE_COUNT_WIDTH
+    third = (filename_width // 3) - 1
+    two_thirds = third * 2
     lang = None
     count = subtotal = 0
     for file_datum in sorted(file_data,
                              key=bylines if sortbylines else bynames):
         if lang is None or lang != file_datum.lang:
             if lang is not None:
-                display_subtotal(lang, count, subtotal, ROW_WIDTH)
+                display_subtotal(lang, count, subtotal, row_width)
                 count = subtotal = 0
             lang = file_datum.lang
             name = f' {DATA_FOR_LANG[lang].name} '
-            print(name.center(ROW_WIDTH, THICK))
+            print(name.center(row_width, THICK))
         filename = file_datum.filename
-        if len(filename) > FILENAME_WIDTH:
-            filename = filename[:THIRD] + ELLIPSIS + filename[-TWO_THIRDS:]
-        print(f'{filename:{FILENAME_WIDTH}} '
+        if len(filename) > filename_width:
+            filename = filename[:third] + ELLIPSIS + filename[-two_thirds:]
+        print(f'{filename:{filename_width}} '
               f'{file_datum.lines: >{LINE_COUNT_WIDTH},d}')
         subtotal += file_datum.lines
         count += 1
     if lang is not None:
-        display_subtotal(lang, count, subtotal, ROW_WIDTH)
-        print(THICK * ROW_WIDTH)
+        display_subtotal(lang, count, subtotal, row_width)
+        print(THICK * row_width)
 
 
 def get_width(file_data, maxwidth):

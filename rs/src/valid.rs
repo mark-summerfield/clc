@@ -44,9 +44,11 @@ pub fn is_valid_file(filename: &Path, config: &Config) -> bool {
                 }
             }
             if let Some((_, ext)) = name.rsplit_once('.') {
-                let data_for_lang = consts::DATA_FOR_LANG.get();
                 for lang in &config.langs {
-                    if data_for_lang[lang.as_str()].exts.contains(ext) {
+                    if consts::DATA_FOR_LANG.get()[lang.as_str()]
+                        .exts
+                        .contains(ext)
+                    {
                         return true;
                     }
                 }

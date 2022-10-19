@@ -93,8 +93,7 @@ fn abspath(name: &str) -> PathBuf {
 fn lang_for_name(name: &Path) -> Option<String> {
     if let Some(ext) = name.extension() {
         let ext = ext.to_string_lossy().to_string();
-        let data_for_lang = consts::DATA_FOR_LANG.get();
-        for (lang, lang_data) in data_for_lang.iter() {
+        for (lang, lang_data) in consts::DATA_FOR_LANG.get().iter() {
             if lang_data.exts.contains(ext.as_str()) {
                 return Some(lang.to_string());
             }
