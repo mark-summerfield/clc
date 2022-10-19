@@ -46,6 +46,10 @@ else:
     ELLIPSIS = '…'
 
 
+FILE_COUNT_WIDTH = 7
+LINE_COUNT_WIDTH = 11
+
+
 def main():
     config = get_config()
     t = time.monotonic()
@@ -67,7 +71,7 @@ def display_summary(file_data, sortbylines, secs):
 
     total_for_lang = collections.defaultdict(int)
     count_for_lang = collections.defaultdict(int)
-    width = max(len(value.name) for value in DATA_FOR_LANG.values())
+    LANG_WIDTH = max(len(value.name) for value in DATA_FOR_LANG.values())
     for file_datum in file_data:
         total_for_lang[file_datum.lang] += file_datum.lines
         count_for_lang[file_datum.lang] += 1
@@ -75,10 +79,11 @@ def display_summary(file_data, sortbylines, secs):
                               key=bylines if sortbylines else bynames):
         count = count_for_lang[lang]
         s = ' ' if count == 1 else 's'
-        print(f'{DATA_FOR_LANG[lang].name:<{width}} '
-              f'{count:7,d} file{s} {total:12,d} lines')
+        print(f'{DATA_FOR_LANG[lang].name:<{LANG_WIDTH}} '
+              f'{count:{FILE_COUNT_WIDTH},d} file{s} '
+              f'{total:{LINE_COUNT_WIDTH},d} lines')
     if secs > 0.1:
-        print(f'{secs:.3f} sec'.rjust(width))
+        print(f'{secs:.3f} sec')
 
 
 def display_full(file_data, sortbylines, maxwidth):
@@ -88,32 +93,31 @@ def display_full(file_data, sortbylines, maxwidth):
     def bylines(datum):
         return datum.lang, datum.lines, datum.filename.lower()
 
-    SIZE = 12
-    NWIDTH = SIZE - 1
-    width = get_width(file_data, maxwidth)
-    third = (width // 3) - 1
-    twothirds = third * 2
+    FILENAME_WIDTH = get_width(file_data, maxwidth)
+    ROW_WIDTH = FILENAME_WIDTH + 1 + LINE_COUNT_WIDTH
+    THIRD = (FILENAME_WIDTH // 3) - 1
+    TWO_THIRDS = THIRD * 2
     lang = None
     count = subtotal = 0
     for file_datum in sorted(file_data,
                              key=bylines if sortbylines else bynames):
         if lang is None or lang != file_datum.lang:
             if lang is not None:
-                display_subtotal(lang, count, subtotal, width + SIZE,
-                                 NWIDTH)
+                display_subtotal(lang, count, subtotal, ROW_WIDTH)
                 count = subtotal = 0
             lang = file_datum.lang
             name = f' {DATA_FOR_LANG[lang].name} '
-            print(name.center(width + SIZE, THICK))
+            print(name.center(ROW_WIDTH, THICK))
         filename = file_datum.filename
-        if len(filename) > width:
-            filename = filename[:third] + ELLIPSIS + filename[-twothirds:]
-        print(f'{filename:{width}} {file_datum.lines: >{NWIDTH},d}')
+        if len(filename) > FILENAME_WIDTH:
+            filename = filename[:THIRD] + ELLIPSIS + filename[-TWO_THIRDS:]
+        print(f'{filename:{FILENAME_WIDTH}} '
+              f'{file_datum.lines: >{LINE_COUNT_WIDTH},d}')
         subtotal += file_datum.lines
         count += 1
     if lang is not None:
-        display_subtotal(lang, count, subtotal, width + SIZE, NWIDTH)
-        print(THICK * (width + SIZE))
+        display_subtotal(lang, count, subtotal, ROW_WIDTH)
+        print(THICK * ROW_WIDTH)
 
 
 def get_width(file_data, maxwidth):
@@ -126,13 +130,14 @@ def get_width(file_data, maxwidth):
     return width
 
 
-def display_subtotal(lang, count, subtotal, span, nwidth):
+def display_subtotal(lang, count, subtotal, row_width):
     lang = DATA_FOR_LANG[lang].name
-    print(THIN * span)
+    print(THIN * row_width)
     s = ' ' if count == 1 else 's'
-    numbers = f'{count:7,d} file{s} {subtotal:{nwidth},d} lines'
-    span -= len(numbers)
-    print(f'{lang:<{span}}{numbers}')
+    numbers = (f'{count:{FILE_COUNT_WIDTH},d} file{s} '
+               f'{subtotal:{LINE_COUNT_WIDTH},d} lines')
+    row_width -= len(numbers)
+    print(f'{lang:<{row_width}}{numbers}')
 
 
 def count_lines(name):
