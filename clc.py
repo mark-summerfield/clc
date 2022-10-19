@@ -99,7 +99,8 @@ def display_full(file_data, sortbylines, maxwidth):
                              key=bylines if sortbylines else bynames):
         if lang is None or lang != file_datum.lang:
             if lang is not None:
-                display_subtotal(lang, count, subtotal, width, SIZE, NWIDTH)
+                display_subtotal(lang, count, subtotal, width + SIZE,
+                                 NWIDTH)
                 count = subtotal = 0
             lang = file_datum.lang
             name = f' {DATA_FOR_LANG[lang].name} '
@@ -111,7 +112,7 @@ def display_full(file_data, sortbylines, maxwidth):
         subtotal += file_datum.lines
         count += 1
     if lang is not None:
-        display_subtotal(lang, count, subtotal, width, SIZE, NWIDTH)
+        display_subtotal(lang, count, subtotal, width + SIZE, NWIDTH)
         print(THICK * (width + SIZE))
 
 
@@ -125,9 +126,8 @@ def get_width(file_data, maxwidth):
     return width
 
 
-def display_subtotal(lang, count, subtotal, width, size, nwidth):
+def display_subtotal(lang, count, subtotal, span, nwidth):
     lang = DATA_FOR_LANG[lang].name
-    span = width + size
     print(THIN * span)
     s = ' ' if count == 1 else 's'
     numbers = f'{count:7,d} file{s} {subtotal:{nwidth},d} lines'

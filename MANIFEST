@@ -1,9 +1,3 @@
-# TODO clc.rs single then multi-threaded with rayon
-# (so I can compare exe size with C++)
-
-# TODO clc.cpp single threaded
-# TODO clc.cpp multi-threaded
-
 rs/src/main.rs
 rs/src/valid.rs
 rs/src/display.rs

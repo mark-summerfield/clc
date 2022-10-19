@@ -23,14 +23,14 @@ fn main() {
     let config = Config::new();
     let t = Instant::now();
     let filenames = get_filenames(&config);
-    let results = filenames
+    let file_data = filenames
         .par_iter()
         .filter_map(|filename| process_one(filename).ok())
         .collect();
     if config.summary {
-        display::display_summary(results, config, t);
+        display::display_summary(file_data, config, t);
     } else {
-        display::display_full(results, config);
+        display::display_full(file_data, config);
     }
 }
 
