@@ -1,3 +1,7 @@
+# TODO 
+# - filename elision (in a separate function)
+# - linux vs windows thick & thin chars
+# - refactoring
 rs/src/main.rs
 rs/src/valid.rs
 rs/src/display.rs

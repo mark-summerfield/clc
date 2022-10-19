@@ -43,18 +43,14 @@ pub fn initialize() {
     ]));
 }
 
-#[derive(Clone, Debug)]
-pub struct LangData {
-    pub name: String,
-    pub exts: HashSet<String>,
+#[derive(Debug)]
+pub struct LangData<'a> {
+    pub name: &'a str,
+    pub exts: HashSet<&'a str>,
 }
 
-impl LangData {
-    pub fn new(name: &str, exts: HashSet<&str>) -> Self {
-        let mut owned_exts: HashSet<String> = HashSet::new();
-        for ext in exts {
-            owned_exts.insert(ext.to_string());
-        }
-        Self { name: name.to_string(), exts: owned_exts }
+impl<'a> LangData<'a> {
+    pub fn new(name: &'a str, exts: HashSet<&'a str>) -> Self {
+        Self { name, exts }
     }
 }
