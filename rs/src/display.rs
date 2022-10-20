@@ -43,10 +43,9 @@ pub fn display_summary(
 
 pub fn display_full(mut file_data: Vec<FileData>, config: Config) {
     let locale = SystemLocale::default().unwrap();
-    let filename_width = get_width(&file_data, config.maxwidth);
+    let filename_width = get_filename_width(&file_data, config.maxwidth);
     let row_width = filename_width + 1 + consts::LINE_COUNT_WIDTH;
     let third = (filename_width / 3) - 1;
-    let two_thirds = third * 2;
     let lines_width = consts::LINE_COUNT_WIDTH;
     let mut lang = String::new();
     let mut count = 0;
@@ -64,22 +63,13 @@ pub fn display_full(mut file_data: Vec<FileData>, config: Config) {
                 consts::DATA_FOR_LANG.get().get(lang.as_str())
             {
                 let name = format!(" {} ", lang_data.name);
-                // TODO use nicer chars for Linux
+                #[cfg(windows)]
                 println!("{name:=^row_width$}");
+                #[cfg(unix)]
+                println!("{name:━^row_width$}");
             }
         }
-        let filename = file_datum.filename;
-        /* TODO elide middle
-        if filename.len() > filename_width {
-            let mut chars1;
-            let mut chars2;
-            for (i, c) in filename.chars().enumerate() {
-                if i < third {
-                    chars1.push(c);
-                }
-            }
-        }
-        */
+        let filename = elide(&file_datum.filename, third, filename_width);
         let lines = file_datum.lines.to_formatted_string(&locale);
         println!("{filename:filename_width$} {lines: >lines_width$}");
         subtotal += file_datum.lines;
@@ -87,7 +77,10 @@ pub fn display_full(mut file_data: Vec<FileData>, config: Config) {
     }
     if !lang.is_empty() {
         display_subtotal(&lang, count, subtotal, row_width);
-        println!("{}", "=".repeat(row_width)); // TODO nicer char on linux
+        #[cfg(windows)]
+        println!("{}", "=".repeat(row_width));
+        #[cfg(unix)]
+        println!("{}", "━".repeat(row_width));
     }
 }
 
@@ -100,7 +93,10 @@ fn display_subtotal(
     if let Some(lang_data) = consts::DATA_FOR_LANG.get().get(lang) {
         let name = lang_data.name;
         let locale = SystemLocale::default().unwrap();
-        println!("{}", "-".repeat(row_width)); // TODO nicer char on linux
+        #[cfg(windows)]
+        println!("{}", "-".repeat(row_width));
+        #[cfg(unix)]
+        println!("{}", "─".repeat(row_width));
         let s = if count == 1 { ' ' } else { 's' };
         let count = count.to_formatted_string(&locale);
         let subtotal = subtotal.to_formatted_string(&locale);
@@ -109,7 +105,7 @@ fn display_subtotal(
         let numbers = format!(
             "{count:>count_width$} file{s} {subtotal:>lines_width$} lines"
         );
-        let width = row_width - numbers.len();
+        let width = (row_width - numbers.len()).min(10000);
         println!("{name:<width$}{numbers}");
     }
 }
@@ -123,7 +119,7 @@ fn get_lang_width() -> usize {
         .unwrap_or(10)
 }
 
-fn get_width(file_data: &[FileData], maxwidth: usize) -> usize {
+fn get_filename_width(file_data: &[FileData], maxwidth: usize) -> usize {
     if let Some(width) = file_data
         .iter()
         .map(|f| f.filename.len())
@@ -133,6 +129,7 @@ fn get_width(file_data: &[FileData], maxwidth: usize) -> usize {
     } else {
         maxwidth
     }
+    .min(maxwidth)
 }
 
 fn get_maps(file_data: &[FileData]) -> (NForLang, NForLang) {
@@ -216,5 +213,22 @@ fn sort_file_data(file_data: &mut Vec<FileData>, sortbylines: bool) {
                     })
             }
         });
+    }
+}
+
+fn elide(s: &str, offset: usize, width: usize) -> String {
+    assert!(offset + 5 < width);
+    let chars: Vec<char> = s.chars().collect();
+    if chars.len() <= width {
+        s.to_string()
+    } else {
+        let left: String = chars[..offset].iter().collect();
+        #[cfg(windows)]
+        let ellipsis = "...";
+        #[cfg(unix)]
+        let ellipsis = "…";
+        let i = chars.len() - (width - (offset + ellipsis.len()));
+        let right: String = chars[i..].iter().collect();
+        format!("{left}{ellipsis}{right}")
     }
 }

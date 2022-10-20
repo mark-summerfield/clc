@@ -96,7 +96,7 @@ def display_full(file_data, sortbylines, maxwidth):
     filename_width = get_width(file_data, maxwidth)
     row_width = filename_width + 1 + LINE_COUNT_WIDTH
     third = (filename_width // 3) - 1
-    two_thirds = third * 2
+    two_thirds = (third * 2) + 1
     lang = None
     count = subtotal = 0
     for file_datum in sorted(file_data,
@@ -276,7 +276,7 @@ Supported language names: {supported}.''')
         config.file = {os.path.abspath('.')}
     else:
         config.file = {os.path.abspath(file) for file in config.file}
-    config.maxwidth -= 13 # we use this only for the filename part
+    config.maxwidth -= (LINE_COUNT_WIDTH + 2)
     return config
 
 

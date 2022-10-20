@@ -39,6 +39,8 @@ impl Config {
         } else {
             80
         };
+        // Internally we use this purely to elide filenames, hence the -
+        let maxwidth = maxwidth - (consts::LINE_COUNT_WIDTH + 2);
         let files = if let Some(file) = cli.file {
             HashSet::from_iter(file)
         } else {
