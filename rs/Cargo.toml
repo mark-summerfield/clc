@@ -4,18 +4,18 @@ path = "src/main.rs"
 
 [package]
 name = "qtrac-clc"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 publish = true
 authors = [ "Mark Summerfield <mark@qtrac.eu>",]
-include = [ "Cargo.toml", "src/**/*.rs"]
+include = [ "Cargo.toml", "src/**/*.rs",]
 description = "clc (code line count) quickly counts newlines in code files"
 documentation = "https://docs.rs/clc/latest/clc/"
 homepage = "https://github.com/mark-summerfield/clc"
 repository = "https://github.com/mark-summerfield/clc"
 readme = "README.md"
-keywords = [ "statistics", "utility", "cli", "lines", "cloc" ]
-categories = [ "development-tools", "text-processing"]
+keywords = [ "statistics", "utility", "cli", "lines", "cloc",]
+categories = [ "development-tools", "text-processing",]
 license = "GPL-3.0"
 
 [dependencies]
@@ -26,11 +26,6 @@ state = "^0.5"
 term_size = "^0.3"
 walkdir = "^2.3"
 
-[profile.release]
-strip = true
-opt-level = 3
-lto = true
-
 [dependencies.num-format]
 version = "0.4.3"
 features = [ "with-system-locale",]
@@ -38,3 +33,8 @@ features = [ "with-system-locale",]
 [dependencies.clap]
 version = "^4"
 features = [ "derive", "wrap_help",]
+
+[profile.release]
+strip = true
+opt-level = 3
+lto = true
