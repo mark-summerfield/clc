@@ -2,6 +2,17 @@
 name = "clc"
 version = "1.0.0"
 edition = "2021"
+publish = true
+authors = [ "Mark Summerfield <mark@qtrac.eu>",]
+include = [ "Cargo.toml", "src/**/*.rs"]
+description = "clc (code line count) quickly counts newlines in code files"
+documentation = "https://docs.rs/clc/latest/clc/"
+homepage = "https://github.com/mark-summerfield/clc"
+repository = "https://github.com/mark-summerfield/clc"
+readme = "README.md"
+keywords = [ ] # TODO
+categories = [ "development-tools", "text-processing" ] # TODO
+license = "GPL-3.0"
 
 [dependencies]
 anyhow = "^1"
