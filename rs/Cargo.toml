@@ -10,8 +10,8 @@ documentation = "https://docs.rs/clc/latest/clc/"
 homepage = "https://github.com/mark-summerfield/clc"
 repository = "https://github.com/mark-summerfield/clc"
 readme = "README.md"
-keywords = [ ] # TODO
-categories = [ "development-tools", "text-processing" ] # TODO
+keywords = [ "statistics", "utility", "cli", "lines", "cloc" ]
+categories = [ "development-tools", "text-processing", "command line utilities"]
 license = "GPL-3.0"
 
 [dependencies]

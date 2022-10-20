@@ -7,6 +7,7 @@ rs/src/types.rs
 rs/src/util.rs
 rs/src/consts.rs
 rs/deploy.sh
+rs/README.md
 rs/Cargo.toml
 
 # TODO SConstruct & SConscript (see ~/app/uxf/cpp)
