@@ -8,6 +8,7 @@ const MAXSIZE_RANGE: Range<usize> = 20..32767;
 
 #[derive(Parser, Debug)]
 #[clap(
+    name = "clc",
     version,
     about = "Counts the lines in the code files for the languages \
 processed (excluding . folders).

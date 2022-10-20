@@ -164,20 +164,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "clc"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "clap 4.0.15",
- "memmap2",
- "num-format",
- "rayon",
- "state",
- "term_size",
- "walkdir",
-]
-
-[[package]]
 name = "crossbeam-channel"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -551,6 +537,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94e2ef8dbfc347b10c094890f778ee2e36ca9bb4262e86dc99cd217e35f3470b"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "qtrac-clc"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "clap 4.0.15",
+ "memmap2",
+ "num-format",
+ "rayon",
+ "state",
+ "term_size",
+ "walkdir",
 ]
 
 [[package]]

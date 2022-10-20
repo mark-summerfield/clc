@@ -1,5 +1,9 @@
-[package]
+[[bin]]
 name = "clc"
+path = "src/main.rs"
+
+[package]
+name = "qtrac-clc"
 version = "1.0.0"
 edition = "2021"
 publish = true

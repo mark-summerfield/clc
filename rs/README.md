@@ -11,8 +11,11 @@ width specified.
 _Note: clc will only build on Windows using clang >= 3.9; it isn't tested on
 Windows._
 
-[crates.io](https://crates.io/crates/clc) •
-[docs](https://docs.rs/clc/latest/clc/)
+[crates.io](https://crates.io/crates/qtrac-clc) •
+[docs](https://docs.rs/clc/latest/qtrac-clc/)
+
+(Due to a name conflict the cargo crate is `qtrac-clc` but the executable is
+`clc`.)
 
 ## Example Summary
 
