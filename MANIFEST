@@ -1,12 +1,10 @@
-# TODO 
-# - filename elision (in a separate function)
-# - linux vs windows thick & thin chars
-# - refactoring
 rs/src/main.rs
 rs/src/valid.rs
 rs/src/display.rs
 rs/src/config.rs
 rs/src/cli.rs
+rs/src/types.rs
+rs/src/util.rs
 rs/src/consts.rs
 rs/deploy.sh
 rs/Cargo.toml

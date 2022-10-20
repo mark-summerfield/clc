@@ -5,6 +5,8 @@ mod cli;
 mod config;
 mod consts;
 mod display;
+mod types;
+mod util;
 mod valid;
 
 use anyhow::Result;
@@ -16,6 +18,7 @@ use std::{
     path::{Path, PathBuf},
     time::Instant,
 };
+use types::FileData;
 use walkdir::WalkDir;
 
 fn main() {
@@ -61,7 +64,7 @@ fn process_one(filename: &Path) -> Result<FileData> {
 fn get_filenames(config: &Config) -> Vec<PathBuf> {
     let mut filenames = Vec::with_capacity(1000);
     for name in &config.files {
-        let filename = abspath(name);
+        let filename = util::abspath(name);
         if filename.is_file() {
             if valid::is_valid_file(&filename, config) {
                 filenames.push(filename);
@@ -79,15 +82,6 @@ fn get_filenames(config: &Config) -> Vec<PathBuf> {
         }
     }
     filenames
-}
-
-fn abspath(name: &str) -> PathBuf {
-    let filename = PathBuf::from(name);
-    if filename.is_absolute() {
-        filename
-    } else {
-        filename.canonicalize().unwrap_or(filename)
-    }
 }
 
 fn lang_for_name(name: &Path) -> Option<String> {
@@ -115,22 +109,5 @@ fn lang_for_line(line: &str) -> &str {
         "tcl"
     } else {
         ""
-    }
-}
-
-#[derive(Debug)]
-pub struct FileData {
-    pub lang: String,
-    pub filename: String,
-    pub lines: usize,
-}
-
-impl FileData {
-    pub fn new(lang: String, filename: &Path, lines: usize) -> Self {
-        Self {
-            lang,
-            filename: filename.to_string_lossy().to_string(),
-            lines,
-        }
     }
 }

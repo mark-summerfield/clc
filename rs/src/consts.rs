@@ -1,6 +1,7 @@
 // Copyright © 2022 Mark Summerfield. All rights reserved.
 // License: GPLv3
 
+use crate::types::LangData;
 use state::Storage;
 use std::collections::{HashMap, HashSet};
 
@@ -41,16 +42,4 @@ pub fn initialize() {
         ("tcl", LangData::new("Tcl", HashSet::from(["tcl"]))),
         ("vala", LangData::new("Vala", HashSet::from(["vala"]))),
     ]));
-}
-
-#[derive(Debug)]
-pub struct LangData<'a> {
-    pub name: &'a str,
-    pub exts: HashSet<&'a str>,
-}
-
-impl<'a> LangData<'a> {
-    pub fn new(name: &'a str, exts: HashSet<&'a str>) -> Self {
-        Self { name, exts }
-    }
 }
