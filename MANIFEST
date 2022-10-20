@@ -14,6 +14,7 @@ rs/Cargo.toml
 cpp/clc.cpp
 
 clc.py
+README.md
 
 st.sh
 
