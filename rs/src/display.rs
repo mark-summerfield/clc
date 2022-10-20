@@ -160,7 +160,7 @@ fn get_filename_width(file_data: &[FileData], maxwidth: usize) -> usize {
     .min(maxwidth)
 }
 
-fn sort_file_data(file_data: &mut Vec<FileData>, sortbylines: bool) {
+fn sort_file_data(file_data: &mut [FileData], sortbylines: bool) {
     if sortbylines {
         file_data.sort_by(|a, b| {
             if a.lang != b.lang {
@@ -201,7 +201,7 @@ fn display_new_lang(
 ) -> (String, usize, usize) {
     let mut zeros = false;
     if !lang.is_empty() {
-        display_subtotal(&lang, count, subtotal, row_width);
+        display_subtotal(lang, count, subtotal, row_width);
         zeros = true;
     }
     let lang = &file_datum.lang;
