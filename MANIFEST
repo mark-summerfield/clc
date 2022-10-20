@@ -10,8 +10,9 @@ rs/deploy.sh
 rs/README.md
 rs/Cargo.toml
 
-# TODO SConstruct & SConscript (see ~/app/uxf/cpp)
-cpp/clc.cpp
+cpp/src/SConscript
+cpp/src/clc.cpp
+cpp/SConstruct
 
 clc.py
 README.md
