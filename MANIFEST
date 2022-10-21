@@ -10,12 +10,6 @@ rs/deploy.sh
 rs/README.md
 rs/Cargo.toml
 
-cpp/src/SConscript
-cpp/src/clc.cpp
-cpp/src/config.hpp
-cpp/src/config.cpp
-cpp/SConstruct
-
 clc.py
 
 README.md
