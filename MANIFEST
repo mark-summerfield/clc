@@ -1,3 +1,17 @@
+# TODO
+# py & rs 1.1.0
+# at startup read (if exists):
+#   path/to/exe/clc.dat
+#   path/to/user-config/clc.dat e.g. ~/.config/clc.dat
+#   cwd/.clc.dat
+# & for each one read each line on an insert or replace basis
+# e.g., if you don't want to count .pyw files use:
+#   py|Python|py
+# and if you want to count Pascal files use, say:
+#   pas|Pascal|pas pp inc
+# doc: clc.dat format is:
+#  lang|Name|ext1 [ext2 [ext3 [...]]] 
+
 rs/src/main.rs
 rs/src/valid.rs
 rs/src/display.rs
