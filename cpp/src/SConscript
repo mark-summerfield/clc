@@ -1,7 +1,8 @@
-app = 'clc.cpp'
-cxxflags = '-Wall -O2'
-if Environment()['PLATFORM'] == 'posix':
-    cxxflags += ' -std=c++17 -Wextra'
-env = Environment(CXXFLAGS=cxxflags, CPPDEFINES='RELEASE')
-exe = env.Program('clc', app)
+files = Split('''
+    clc.cpp
+    config.cpp
+''')
+env = Environment(CXXFLAGS='-Wall -O2 -std=c++17 -Wextra',
+                  CPPDEFINES='RELEASE')
+exe = env.Program('clc', files)
 env.Install('../dist', exe)
