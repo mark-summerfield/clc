@@ -5,7 +5,7 @@ use crate::cli::Cli;
 use crate::consts;
 use crate::types::LangData;
 use anyhow::Result;
-use clap::{error, CommandFactory, Parser};
+use clap::{error, CommandFactory, FromArgMatches};
 use std::{
     collections::{HashMap, HashSet},
     env,
@@ -27,11 +27,12 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Self {
-        read_config_files();
-        // let command = Cli::command();
-        // let _ = command.about("XXX"); // TODO get_about() reads DATA_FOR_LANG
-        // ???
-        let cli = Cli::parse();
+        read_config_files(); // NOTE must come first
+        let command = Cli::command();
+        let cli = Cli::from_arg_matches(
+            &command.about(get_about()).get_matches(),
+        )
+        .unwrap();
         let langs = get_langs(cli.language, cli.skiplanguage);
         let mut exclude = HashSet::from_iter(
             consts::EXCLUDE.get().iter().map(|s| s.to_string()),
@@ -197,4 +198,27 @@ fn initial_data_for_lang() -> HashMap<String, LangData> {
             LangData::new("Vala", HashSet::from(["vala"])),
         ),
     ])
+}
+
+fn get_about() -> String {
+    // TODO
+    //let langs: Vec<&str> = HashSet::from_iter(
+    //    consts::DATA_FOR_LANG.get().keys().map(|s| s.to_string()),
+    //);
+
+    format!("Counts the lines in the code files for the languages \
+processed (excluding . folders).
+
+Supported language names: \
+c cpp d go java jl nim pl py rb rs tcl vala.
+
+Also supports any languages specified in any clc.dat files that are found. \
+These files are looked for in the clc executable's folder, the home \
+folder, the home/.config folder, and the current folder. These files have \
+the form: 
+    lang|Name|ext1 [ext2 [ext3 ... [extN]]]
+For example:
+    pas|Pascal|pas pp inc
+    sql|SQL|sql
+Blank lines and lines beginning with `#` are ignored.")
 }
