@@ -201,24 +201,26 @@ fn initial_data_for_lang() -> HashMap<String, LangData> {
 }
 
 fn get_about() -> String {
-    // TODO
-    //let langs: Vec<&str> = HashSet::from_iter(
-    //    consts::DATA_FOR_LANG.get().keys().map(|s| s.to_string()),
-    //);
-
-    format!("Counts the lines in the code files for the languages \
+    let mut langs = Vec::from_iter(
+        consts::DATA_FOR_LANG.get().keys().map(|s| s.to_string()),
+    );
+    langs.sort_unstable_by_key(|a| a.to_lowercase());
+    let langs = langs.join(" ");
+    format!(
+        "Counts the lines in the code files for the languages \
 processed (excluding . folders).
 
-Supported language names: \
-c cpp d go java jl nim pl py rb rs tcl vala.
+Supported language names: {langs}
 
-Also supports any languages specified in any clc.dat files that are found. \
-These files are looked for in the clc executable's folder, the home \
+The above names are the built-in ones and those from any clc.dat files \
+that were found.
+The clc.dat files are looked for in the clc executable's folder, the home \
 folder, the home/.config folder, and the current folder. These files have \
 the form: 
     lang|Name|ext1 [ext2 [ext3 ... [extN]]]
 For example:
     pas|Pascal|pas pp inc
     sql|SQL|sql
-Blank lines and lines beginning with `#` are ignored.")
+Blank lines and lines beginning with `#` are ignored."
+    )
 }
