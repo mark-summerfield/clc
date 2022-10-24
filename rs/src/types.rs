@@ -21,13 +21,15 @@ impl FileData {
 }
 
 #[derive(Debug)]
-pub struct LangData<'a> {
-    pub name: &'a str,
-    pub exts: HashSet<&'a str>,
+pub struct LangData {
+    pub name: String,
+    pub exts: HashSet<String>,
 }
 
-impl<'a> LangData<'a> {
-    pub fn new(name: &'a str, exts: HashSet<&'a str>) -> Self {
-        Self { name, exts }
+impl LangData {
+    pub fn new(name: &str, exts: HashSet<&str>) -> Self {
+        let exts: HashSet<String> =
+            exts.iter().map(|e| e.to_string()).collect();
+        Self { name: name.to_string(), exts }
     }
 }

@@ -3,8 +3,16 @@
 
 use crate::cli::Cli;
 use crate::consts;
+use crate::types::LangData;
+use anyhow::Result;
 use clap::{error, CommandFactory, Parser};
-use std::collections::HashSet;
+use std::{
+    collections::{HashMap, HashSet},
+    env,
+    fs::File,
+    io::prelude::*,
+    path::Path,
+};
 
 #[derive(Debug)]
 pub struct Config {
@@ -19,6 +27,7 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Self {
+        read_config_files();
         let cli = Cli::parse();
         let langs = get_langs(cli.language, cli.skiplanguage);
         let mut exclude = HashSet::from_iter(
@@ -94,4 +103,95 @@ fn get_langs(
         eprintln!("ignoring unrecognized language{s}: {names}");
     }
     langs
+}
+
+fn read_config_files() {
+    let mut data_for_lang = initial_data_for_lang();
+    // We ignore errors & only care about files we find
+    if let Ok(filename) = env::current_exe() {
+        if let Some(filename) = filename.parent() {
+            let filename = filename.join("clc.dat");
+            let _ = read_config_file(&filename, &mut data_for_lang);
+        }
+    }
+    if let Some(home) = dirs::home_dir() {
+        let home1 = home.join("clc.dat");
+        let _ = read_config_file(&home1, &mut data_for_lang);
+        let home2 = home.join(".config/clc.dat");
+        let _ = read_config_file(&home2, &mut data_for_lang);
+    }
+    if let Ok(filename) = env::current_dir() {
+        let filename = filename.join("clc.dat");
+        let _ = read_config_file(&filename, &mut data_for_lang);
+    }
+    consts::DATA_FOR_LANG.set(data_for_lang);
+}
+
+fn read_config_file(
+    filename: &Path,
+    data_for_lang: &mut HashMap<String, LangData>,
+) -> Result<()> {
+    let mut file = File::open(&filename)?;
+    let mut text = String::new();
+    file.read_to_string(&mut text)?;
+    for line in text.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+        let parts: Vec<&str> = line.splitn(3, '|').collect();
+        if parts.len() == 3 {
+            let lang = parts[0].trim();
+            let name = parts[1].trim();
+            let mut exts: HashSet<&str> = HashSet::new();
+            for ext in parts[2].split_whitespace() {
+                if let Some(ext) = ext.strip_prefix('.') {
+                    exts.insert(ext);
+                } else {
+                    exts.insert(ext);
+                }
+            }
+            data_for_lang
+                .insert(lang.to_string(), LangData::new(name, exts));
+        } else {
+            eprintln!("ignoring invalid line from {filename:?}: {line}");
+        }
+    }
+    Ok(())
+}
+
+fn initial_data_for_lang() -> HashMap<String, LangData> {
+    HashMap::from([
+        ("c".to_string(), LangData::new("C", HashSet::from(["h", "c"]))),
+        (
+            "cpp".to_string(),
+            LangData::new(
+                "C++",
+                HashSet::from(["hpp", "hxx", "cpp", "cxx"]),
+            ),
+        ),
+        ("d".to_string(), LangData::new("D", HashSet::from(["d"]))),
+        ("go".to_string(), LangData::new("Go", HashSet::from(["go"]))),
+        (
+            "java".to_string(),
+            LangData::new("Java", HashSet::from(["java"])),
+        ),
+        ("jl".to_string(), LangData::new("Julia", HashSet::from(["jl"]))),
+        ("nim".to_string(), LangData::new("Nim", HashSet::from(["nim"]))),
+        (
+            "pl".to_string(),
+            LangData::new("Perl", HashSet::from(["pl", "PL", "pm"])),
+        ),
+        (
+            "py".to_string(),
+            LangData::new("Python", HashSet::from(["py", "pyw"])),
+        ),
+        ("rb".to_string(), LangData::new("Ruby", HashSet::from(["rb"]))),
+        ("rs".to_string(), LangData::new("Rust", HashSet::from(["rs"]))),
+        ("tcl".to_string(), LangData::new("Tcl", HashSet::from(["tcl"]))),
+        (
+            "vala".to_string(),
+            LangData::new("Vala", HashSet::from(["vala"])),
+        ),
+    ])
 }

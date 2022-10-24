@@ -100,7 +100,7 @@ fn display_summary_line(
     let count_width = consts::FILE_COUNT_WIDTH;
     let lines_width = consts::LINE_COUNT_WIDTH;
     let s = if count == 1 { ' ' } else { 's' };
-    if let Some(lang_data) = consts::DATA_FOR_LANG.get().get(&lang) {
+    if let Some(lang_data) = consts::DATA_FOR_LANG.get().get(lang) {
         let count = count.to_formatted_string(&locale);
         let total = total.to_formatted_string(&locale);
         let name = &lang_data.name;
@@ -227,7 +227,7 @@ fn display_subtotal(
     row_width: usize,
 ) {
     if let Some(lang_data) = consts::DATA_FOR_LANG.get().get(lang) {
-        let name = lang_data.name;
+        let name = &lang_data.name;
         let locale = SystemLocale::default().unwrap();
         #[cfg(windows)]
         println!("{}", "-".repeat(row_width));

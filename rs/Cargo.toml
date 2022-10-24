@@ -4,7 +4,7 @@ path = "src/main.rs"
 
 [package]
 name = "qtrac-clc"
-version = "1.0.1"
+version = "1.1.0"
 edition = "2021"
 publish = true
 authors = [ "Mark Summerfield <mark@qtrac.eu>",]
@@ -20,6 +20,7 @@ license = "GPL-3.0"
 
 [dependencies]
 anyhow = "^1"
+dirs = "^4"
 memmap2 = "^0.5"
 rayon = "^1.5"
 state = "^0.5"

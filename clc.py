@@ -5,6 +5,7 @@
 import argparse
 import collections
 import concurrent.futures
+import functools
 import mmap
 import os
 import pathlib
@@ -12,29 +13,10 @@ import shutil
 import sys
 import time
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 FileData = collections.namedtuple('FileData', ('lang', 'filename', 'lines'))
 LangData = collections.namedtuple('LangData', ('name', 'exts'))
-
-EXCLUDE = {'__pycache__', 'build', 'build.rs', 'CVS', 'dist', 'setup.py',
-           'target'} # All .hidden folders are also excluded
-
-DATA_FOR_LANG = { # Additions here may need additions in lang_for_line()
-    'c': LangData('C', {'.h', '.c'}),
-    'cpp': LangData('C++', {'.hpp', '.hxx', '.cpp', '.cxx'}),
-    'd': LangData('D', {'.d'}),
-    'go': LangData('Go', {'.go'}),
-    'java': LangData('Java', {'.java'}),
-    'jl': LangData('Julia', {'.jl'}),
-    'nim': LangData('Nim', {'.nim'}),
-    'pl': LangData('Perl', {'.pl', '.pm', '.PL'}),
-    'py': LangData('Python', {'.pyw', '.py'}),
-    'rb': LangData('Ruby', {'.rb'}),
-    'rs': LangData('Rust', {'.rs'}),
-    'tcl': LangData('Tcl', {'.tcl'}),
-    'vala': LangData('Vala', {'.vala'}),
-    }
 
 if sys.platform == 'win32':
     THIN = '-'
@@ -48,6 +30,9 @@ else:
 
 FILE_COUNT_WIDTH = 7
 LINE_COUNT_WIDTH = 11
+
+
+DataForLang = {}
 
 
 def main():
@@ -71,7 +56,7 @@ def display_summary(file_data, sortbylines, secs):
 
     total_for_lang = collections.defaultdict(int)
     count_for_lang = collections.defaultdict(int)
-    LANG_WIDTH = max(len(value.name) for value in DATA_FOR_LANG.values())
+    LANG_WIDTH = max(len(value.name) for value in DataForLang.values())
     for file_datum in file_data:
         total_for_lang[file_datum.lang] += file_datum.lines
         count_for_lang[file_datum.lang] += 1
@@ -79,7 +64,7 @@ def display_summary(file_data, sortbylines, secs):
                               key=bylines if sortbylines else bynames):
         count = count_for_lang[lang]
         s = ' ' if count == 1 else 's'
-        print(f'{DATA_FOR_LANG[lang].name:<{LANG_WIDTH}} '
+        print(f'{DataForLang[lang].name:<{LANG_WIDTH}} '
               f'{count:{FILE_COUNT_WIDTH},d} file{s} '
               f'{total:{LINE_COUNT_WIDTH},d} lines')
     if secs > 0.1:
@@ -106,7 +91,7 @@ def display_full(file_data, sortbylines, maxwidth):
                 display_subtotal(lang, count, subtotal, row_width)
                 count = subtotal = 0
             lang = file_datum.lang
-            name = f' {DATA_FOR_LANG[lang].name} '
+            name = f' {DataForLang[lang].name} '
             print(name.center(row_width, THICK))
         filename = file_datum.filename
         if len(filename) > filename_width:
@@ -131,13 +116,13 @@ def get_width(file_data, maxwidth):
 
 
 def display_subtotal(lang, count, subtotal, row_width):
-    lang = DATA_FOR_LANG[lang].name
+    name = DataForLang[lang].name, 
     print(THIN * row_width)
     s = ' ' if count == 1 else 's'
     numbers = (f'{count:{FILE_COUNT_WIDTH},d} file{s} '
                f'{subtotal:{LINE_COUNT_WIDTH},d} lines')
     row_width -= len(numbers)
-    print(f'{lang:<{row_width}}{numbers}')
+    print(f'{name:<{row_width}}{numbers}')
 
 
 def count_lines(name):
@@ -168,7 +153,7 @@ def lang_for_line(line):
 
 def lang_for_name(name):
     ext = pathlib.Path(name).suffix
-    for lang, lang_data in DATA_FOR_LANG.items():
+    for lang, lang_data in DataForLang.items():
         if ext in lang_data.exts:
             return lang
 
@@ -210,7 +195,7 @@ def valid_filename(config, name):
     if not path.suffix:
         return False
     for lang in config.language:
-        if path.suffix in DATA_FOR_LANG[lang].exts:
+        if path.suffix in DataForLang[lang].exts:
             return True
     return False
 
@@ -224,8 +209,10 @@ def valid_dirname(config, name):
 
 
 def get_config():
+    DataForLang.update(DATA_FOR_LANG)
+    read_config_files()
     width = shutil.get_terminal_size()[0]
-    supported = ' '.join(sorted(DATA_FOR_LANG.keys()))
+    supported = ' '.join(sorted(DataForLang.keys()))
     parser = argparse.ArgumentParser(description=f'''
 Counts the lines in the code files for the languages processed (ignoring .
 folders).
@@ -262,7 +249,7 @@ Supported language names: {supported}.''')
         '[default: .]')
     config = parser.parse_args()
     if config.language is None:
-        config.language = set(DATA_FOR_LANG.keys())
+        config.language = set(DataForLang.keys())
     else:
         config.language = set(config.language)
     if config.skiplanguage is not None:
@@ -279,6 +266,57 @@ Supported language names: {supported}.''')
     config.maxwidth -= (LINE_COUNT_WIDTH + 2)
     return config
 
+
+def read_config_files():
+    for filename in (os.path.join(os.path.dirname(__file__), 'clc.dat'),
+                     os.path.expanduser('~/clc.dat'),
+                     os.path.expanduser('~/.config/clc.dat'),
+                     os.path.join(os.getcwd(), 'clc.dat')):
+        read_config_file(filename)
+
+
+def read_config_file(filename):
+    try:
+        with open(filename, 'rt', encoding='utf-8') as file:
+            for line in file:
+                line = line.strip()
+                if not line or line.startswith('#'): # skip blank & comments
+                    continue
+                parts = line.split('|', 2)
+                if len(parts) == 3:
+                    lang = parts[0].strip()
+                    name = parts[1].strip()
+                    exts = set()
+                    for ext in parts[2].split():
+                        if not ext.startswith('.'):
+                            ext = f'.{ext}'
+                        exts.add(ext)
+                    DataForLang[lang] = LangData(name, exts)
+                else:
+                    print('ignoring invalid line from {filename!r}: {line}',
+                          file=sys.stderr)
+    except FileNotFoundError:
+        pass # these files are optional
+
+
+EXCLUDE = {'__pycache__', 'build', 'build.rs', 'CVS', 'dist', 'setup.py',
+           'target'} # All .hidden folders are also excluded
+
+DATA_FOR_LANG = { # Additions here may need additions in lang_for_line()
+    'c': LangData('C', {'.h', '.c'}),
+    'cpp': LangData('C++', {'.hpp', '.hxx', '.cpp', '.cxx'}),
+    'd': LangData('D', {'.d'}),
+    'go': LangData('Go', {'.go'}),
+    'java': LangData('Java', {'.java'}),
+    'jl': LangData('Julia', {'.jl'}),
+    'nim': LangData('Nim', {'.nim'}),
+    'pl': LangData('Perl', {'.pl', '.pm', '.PL'}),
+    'py': LangData('Python', {'.pyw', '.py'}),
+    'rb': LangData('Ruby', {'.rb'}),
+    'rs': LangData('Rust', {'.rs'}),
+    'tcl': LangData('Tcl', {'.tcl'}),
+    'vala': LangData('Vala', {'.vala'}),
+    }
 
 if __name__ == '__main__':
     main()
