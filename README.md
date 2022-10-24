@@ -60,19 +60,22 @@ But what if you want to change the extensions used to count as a particular
 language? Or what if you want to count a language which isn't supported?
 
 From version 1.1.0 both these can be solved by using `clc.dat` data files.
-These are plain text files with this format:
+These are plain text files with this format (one entry per line):
 
     lang|Name|ext1 [ext2 [ext3 ... [extN]]]
 
 For example:
 
     pas|Pascal|pas pp inc
+    sql|SQL|sql
+
+Blank lines and lines beginning with `#` are ignored.
 
 `clc` reads in every `clc.dat` file it finds and for every record it reads
 if an entry for the given lang exits it will be replaced by the new data,
 and if it doesn't exist, the new lang and data will be inserted.
 
-For example, by default support for Python in built-in with this data:
+For example, by default support for Python is built-in with this data:
 
     py|Python|py pyw
 

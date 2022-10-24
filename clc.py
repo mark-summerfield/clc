@@ -12,7 +12,7 @@ import shutil
 import sys
 import time
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 FileData = collections.namedtuple('FileData', ('lang', 'filename', 'lines'))
 LangData = collections.namedtuple('LangData', ('name', 'exts'))
@@ -115,7 +115,7 @@ def get_width(file_data, maxwidth):
 
 
 def display_subtotal(lang, count, subtotal, row_width):
-    name = DataForLang[lang].name, 
+    name = DataForLang[lang].name
     print(THIN * row_width)
     s = ' ' if count == 1 else 's'
     numbers = (f'{count:{FILE_COUNT_WIDTH},d} file{s} '
