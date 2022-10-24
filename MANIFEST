@@ -1,3 +1,5 @@
+go/clc.go
+
 rs/src/main.rs
 rs/src/valid.rs
 rs/src/display.rs
