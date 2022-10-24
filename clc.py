@@ -5,7 +5,6 @@
 import argparse
 import collections
 import concurrent.futures
-import functools
 import mmap
 import os
 import pathlib
