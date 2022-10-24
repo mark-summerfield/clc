@@ -13,7 +13,18 @@ const MAXSIZE_RANGE: Range<usize> = 20..32767;
     about = "Counts the lines in the code files for the languages \
 processed (excluding . folders).
 
-Supported language names: c cpp d go java jl nim pl py rb rs tcl vala."
+Built-in supported language names: \
+c cpp d go java jl nim pl py rb rs tcl vala.
+
+Also supports any languages specified in any clc.dat files that are found. \
+These files are looked for in the clc executable's folder, the home \
+folder, the home/.config folder, and the current folder. These files have \
+the form: 
+    lang|Name|ext1 [ext2 [ext3 ... [extN]]]
+For example:
+    pas|Pascal|pas pp inc
+    sql|SQL|sql
+Blank lines and lines beginning with `#` are ignored."
 )]
 pub struct Cli {
     /// Languages to count [default: all known]

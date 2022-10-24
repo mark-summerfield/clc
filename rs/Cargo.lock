@@ -572,7 +572,7 @@ dependencies = [
 
 [[package]]
 name = "qtrac-clc"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "anyhow",
  "clap 4.0.18",

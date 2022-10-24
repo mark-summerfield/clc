@@ -28,6 +28,9 @@ pub struct Config {
 impl Config {
     pub fn new() -> Self {
         read_config_files();
+        // let command = Cli::command();
+        // let _ = command.about("XXX"); // TODO get_about() reads DATA_FOR_LANG
+        // ???
         let cli = Cli::parse();
         let langs = get_langs(cli.language, cli.skiplanguage);
         let mut exclude = HashSet::from_iter(
