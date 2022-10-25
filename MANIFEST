@@ -1,4 +1,8 @@
 go/clc.go
+go/config.go
+go/consts.go
+
+clc.py
 
 rs/src/main.rs
 rs/src/valid.rs
@@ -11,8 +15,6 @@ rs/src/consts.rs
 rs/deploy.sh
 rs/README.md
 rs/Cargo.toml
-
-clc.py
 
 README.md
 

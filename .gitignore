@@ -45,3 +45,4 @@ zig-cache
 dist/
 build/
 clc.dat
+clc
