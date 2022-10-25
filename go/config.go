@@ -33,16 +33,16 @@ func getConfig() config {
 			"to exclude. Default: .hidden and %s",
 			strings.Join(strSetKeys(excludes), " "))
 	*/
-	var langFlag stringsFlag
-	flag.Var(&langFlag, "language",
-		"The languages to count [default: all known]")
-	flag.Var(&langFlag, "l", "(short for -language)")
-	sortByLines := flag.Bool("bylines", false,
+	var languages stringsFlag
+	flag.Var(&languages, "language",
+		"The languages to count [may be repeated; default: all known]")
+	flag.Var(&languages, "l", "(short for -language)")
+	byLines := flag.Bool("bylines", false,
 		"Sort by lines [default: sort by names]")
 	flag.Parse()
 	config := config{ // TODO
-		Language:    langFlag.ToSet(),
-		SortByLines: *sortByLines,
+		Language:    languages.ToSet(),
+		SortByLines: *byLines,
 	}
 
 	/*
