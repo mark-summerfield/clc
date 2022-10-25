@@ -90,12 +90,11 @@ func readConfigFile(dataForLang dataForLangMap, filename string) {
 		if len(parts) == 3 {
 			lang := strings.TrimSpace(parts[0])
 			name := strings.TrimSpace(parts[1])
-			exts := []string{}
-			for _, ext := range strings.Split(parts[2], " ") {
-				if ext != "" && ext[0] != '.' {
-					ext = "." + ext
+			exts := strings.Split(parts[2], " ")
+			for i := 0; i < len(exts); i++ {
+				if exts[i] != "" && exts[i][0] != '.' {
+					exts[i] = "." + exts[i]
 				}
-				exts = append(exts, ext)
 			}
 			dataForLang[lang] = newLangData(name, exts...)
 		} else {
