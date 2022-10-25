@@ -24,10 +24,10 @@ func getConfig() config {
 	dataForLang := make(dataForLangMap)
 	initializeDataForLang(dataForLang)
 	readConfigFiles(dataForLang)
-	all_langs := getLangs(dataForLang)
+	allLangs := getLangs(dataForLang)
 	desc := fmt.Sprintf("Counts the lines in the code files for the "+
 		"languages processed (ignoring . folders). "+
-		"Supported language names: %s.", strings.Join(all_langs, " "))
+		"Supported language names: %s.", strings.Join(allLangs, " "))
 	parser := argparse.NewParser("clc", desc)
 	language := parser.StringList("l", "language", &argparse.Options{
 		Required: false,
@@ -69,13 +69,14 @@ func getConfig() config {
 		Help:     "The files to count or the folders to recursively search",
 	})
 	err = parser.Parse(os.Args)
-	fmt.Printf("%v\n", *file)// TODO
 	if err != nil {
 		fmt.Print(parser.Usage(err))
 	}
+	//fmt.Println(parser.GetArgs())
+	fmt.Printf("########### %v\n", *file) // TODO
 	langs := strSet{}
 	if len(*language) == 0 {
-		langs = strSetFromSlice(all_langs)
+		langs = strSetFromSlice(allLangs)
 	} else {
 		langs = strSetFromSlice(*language)
 	}
