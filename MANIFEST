@@ -1,5 +1,5 @@
 go/clc.go
-go/config.go # go-flags doesn't work well with programmatic strings
+go/config.go
 go/util.go
 
 clc.py

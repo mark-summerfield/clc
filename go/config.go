@@ -5,12 +5,11 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
-	flags "github.com/jessevdk/go-flags"
 	//	tsize "github.com/kopoli/go-terminal-size"
 	"os"
 	"path"
-	"reflect"
 	"sort"
 	"strings"
 )
@@ -18,57 +17,44 @@ import (
 const fileCountWidth = 7
 const lineCountWidth = 11
 
-/* TODO see: https://pkg.go.dev/github.com/jessevdk/go-flags
-	var options struct {
-		Language    []string `short:"l" long:"language" description:"Languages
-to count [default: all known]"`
-		SortByLines bool     `short:"s" long:"sortbylines"`
-	}
-	rest, err := flags.Parse(&options)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(options, rest)
-	}
-*/
+type stringFlags []string
+
+func (sf *stringFlags) String() string {
+	return fmt.Sprintf("%s", *sf)
+}
+
+func (sf *stringFlags) Set(value string) error {
+	*sf = append(*sf, value)
+	return nil
+}
 
 func getConfig() config {
-	excludes := strSet{"__pycache__": true, "build": true,
-		"build.rs": true, "CVS": true, "dist": true, "setup.py": true,
-		"target": true}
-	dataForLang := make(dataForLangMap)
-	initializeDataForLang(dataForLang)
-	readConfigFiles(dataForLang)
 	/*
-		allLangs := getLangs(dataForLang)
-		desc := fmt.Sprintf("Counts the lines in the code files for the "+
-			"languages processed (ignoring . folders). "+
-			"Supported language names: %s.", strings.Join(allLangs, " "))
+		excludes := strSet{"__pycache__": true, "build": true,
+			"build.rs": true, "CVS": true, "dist": true, "setup.py": true,
+			"target": true}
+		dataForLang := make(dataForLangMap)
+		initializeDataForLang(dataForLang)
+		readConfigFiles(dataForLang)
+			allLangs := getLangs(dataForLang)
+			desc := fmt.Sprintf("Counts the lines in the code files for the "+
+				"languages processed (ignoring . folders). "+
+				"Supported language names: %s.", strings.Join(allLangs, " "))
+		exclude_desc := fmt.Sprintf("the files and folders "+
+			"to exclude. Default: .hidden and %s",
+			strings.Join(strSetKeys(excludes), " "))
 	*/
-	type option_t struct {
-		Language     []string `short:"l" long:"language" description:"Languages to count [default: all known]"`
-		SkipLanguage []string `short:"L" long:"skiplanguage" description:"Languages not to count e.g., '-L d -L cpp' with no '-l' means count all languages except D and C++. Default: none"`
-		Exclude      []string
-		SortByLines  bool `short:"s" long:"sortbylines"`
-	}
-	options := option_t{}
-	st := reflect.TypeOf(options)
-	fs := []reflect.StructField{}
-	for i := 0; i < st.NumField(); i++ {
-		fs = append(fs, st.Field(i))
-	}
-	fs[2].Tag = reflect.StructTag(fmt.Sprintf("the files and folders "+"to exclude. Default: .hidden and %s", strings.Join(strSetKeys(excludes), " ")))
-	st2 := reflect.StructOf(fs)
-	v := reflect.ValueOf(options)
-	v2 := v.Convert(st2)
-	//fmt.Printf("st=%T st2=%T v=%T v2=%T", st, st2, v, v2);
-	options = v2.Interface().(option_t)
-	rest, err := flags.Parse(&options)
-	if err != nil {
-		fmt.Println("ERR", err)
-	} else {
-		fmt.Println("OK", options, rest)
-	}
+	var language stringFlags
+	flag.Var(&language, "language",
+		"The languages to count [default: all known]")
+	flag.Var(&language, "l", "(short for -language)")
+	sortByLines := flag.Bool("bylines", false,
+		"Sort by lines [default: sort by names]")
+	flag.Parse()
+
+	// DEBUG
+	fmt.Println("language", language)
+	fmt.Println("sortbylines", *sortByLines)
 	/*
 		parser := argparse.NewParser("clc", desc)
 		language := parser.StringList("l", "language", &argparse.Options{
