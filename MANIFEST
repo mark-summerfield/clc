@@ -1,6 +1,6 @@
 go/clc.go
 go/config.go
-go/consts.go
+go/util.go
 
 clc.py
 

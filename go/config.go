@@ -7,27 +7,95 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/akamensky/argparse"
+	tsize "github.com/kopoli/go-terminal-size"
 	"os"
 	"path"
 	"sort"
 	"strings"
 )
 
+const fileCountWidth = 7
+const lineCountWidth = 11
+
 func getConfig() config {
-	config := newConfig()
-	initializeDataForLang(config.DataForLang)
-	readConfigFiles(config.DataForLang)
-	langs := strings.Join(getLangs(config.DataForLang), " ")
+	excludes := strSet{"__pycache__": true, "build": true,
+		"build.rs": true, "CVS": true, "dist": true, "setup.py": true,
+		"target": true}
+	dataForLang := make(dataForLangMap)
+	initializeDataForLang(dataForLang)
+	readConfigFiles(dataForLang)
+	all_langs := getLangs(dataForLang)
 	desc := fmt.Sprintf("Counts the lines in the code files for the "+
 		"languages processed (ignoring . folders). "+
-		"Supported language names: %s.", langs)
+		"Supported language names: %s.", strings.Join(all_langs, " "))
 	parser := argparse.NewParser("clc", desc)
-	// TODO add args
-	err := parser.Parse(os.Args)
+	language := parser.StringList("l", "language", &argparse.Options{
+		Required: false,
+		Help:     "The languages to count. Default: all known"})
+	skiplanguage := parser.StringList("L", "skiplanguage",
+		&argparse.Options{
+			Required: false,
+			Help: "The languages not to count, " +
+				"e.g., '-L d -L cpp' with no '-l' means count all " +
+				"languages except D and C++. Default: none"})
+	exclude := parser.StringList("e", "exclude", &argparse.Options{
+		Required: false,
+		Help: fmt.Sprintf("the files and folders to exclude. "+
+			"Default: .hidden and %s",
+			strings.Join(strSetKeys(excludes), " "))})
+	include := parser.StringList("i", "include", &argparse.Options{
+		Required: false,
+		Help: "The files and folders to include (e.g., those without " +
+			"suffixes"})
+	width := 80
+	size, err := tsize.GetSize()
+	if err == nil {
+		width = size.Width
+	}
+	maxWidth := parser.Int("m", "maxwidth", &argparse.Options{
+		Required: false,
+		Help:     "Max line width to use (e.g., for redirected output)",
+		Default:  width})
+	sortByLines := parser.Flag("s", "sortbylines", &argparse.Options{
+		Required: false,
+		Help:     "Sort by lines. Default: sort by names"})
+	summary := parser.Flag("S", "summary", &argparse.Options{
+		Required: false,
+		Help: "Output per-language totals and total time if > 0.1 " +
+			"sec. Default: output per-language and per-file totals"})
+	// TODO FIXME
+	file := parser.StringPositional(&argparse.Options{
+		Required: false,
+		Help:     "The files to count or the folders to recursively search",
+	})
+	err = parser.Parse(os.Args)
+	fmt.Printf("%v\n", *file)// TODO
 	if err != nil {
 		fmt.Print(parser.Usage(err))
 	}
-	// TODO
+	langs := strSet{}
+	if len(*language) == 0 {
+		langs = strSetFromSlice(all_langs)
+	} else {
+		langs = strSetFromSlice(*language)
+	}
+	if len(*skiplanguage) > 0 {
+		for _, lang := range *skiplanguage {
+			delete(langs, lang)
+		}
+	}
+	for _, excl := range *exclude {
+		excludes[excl] = true
+	}
+	config := config{
+		Language:    langs,
+		Exclude:     excludes,
+		Include:     strSetFromSlice(*include),
+		MaxWidth:    *maxWidth - (lineCountWidth + 2),
+		SortByLines: *sortByLines,
+		Summary:     *summary,
+		//File:        strSetFromSlice(*file), // TODO
+		DataForLang: dataForLang}
 	return config
 }
 
@@ -113,8 +181,4 @@ type config struct {
 	Summary     bool
 	File        strSet
 	DataForLang dataForLangMap
-}
-
-func newConfig() config {
-	return config{DataForLang: make(dataForLangMap)}
 }
