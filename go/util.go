@@ -3,7 +3,21 @@ package main
 // Copyright © 2022 Mark Summerfield. All rights reserved.
 // License: GPLv3
 
-import "sort"
+import (
+	"fmt"
+	"sort"
+)
+
+type flagStrings []string
+
+func (fs *flagStrings) String() string {
+	return fmt.Sprintf("%s", *fs)
+}
+
+func (fs *flagStrings) Set(value string) error {
+	*fs = append(*fs, value)
+	return nil
+}
 
 type strSet map[string]bool
 

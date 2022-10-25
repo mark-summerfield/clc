@@ -17,17 +17,6 @@ import (
 const fileCountWidth = 7
 const lineCountWidth = 11
 
-type stringFlags []string
-
-func (sf *stringFlags) String() string {
-	return fmt.Sprintf("%s", *sf)
-}
-
-func (sf *stringFlags) Set(value string) error {
-	*sf = append(*sf, value)
-	return nil
-}
-
 func getConfig() config {
 	/*
 		excludes := strSet{"__pycache__": true, "build": true,
@@ -44,7 +33,7 @@ func getConfig() config {
 			"to exclude. Default: .hidden and %s",
 			strings.Join(strSetKeys(excludes), " "))
 	*/
-	var language stringFlags
+	var language flagStrings
 	flag.Var(&language, "language",
 		"The languages to count [default: all known]")
 	flag.Var(&language, "l", "(short for -language)")
