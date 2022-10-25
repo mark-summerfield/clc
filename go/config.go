@@ -33,17 +33,18 @@ func getConfig() config {
 			"to exclude. Default: .hidden and %s",
 			strings.Join(strSetKeys(excludes), " "))
 	*/
-	var language flagStrings
-	flag.Var(&language, "language",
+	var langFlag stringsFlag
+	flag.Var(&langFlag, "language",
 		"The languages to count [default: all known]")
-	flag.Var(&language, "l", "(short for -language)")
+	flag.Var(&langFlag, "l", "(short for -language)")
 	sortByLines := flag.Bool("bylines", false,
 		"Sort by lines [default: sort by names]")
 	flag.Parse()
+	config := config{ // TODO
+		Language:    langFlag.ToSet(),
+		SortByLines: *sortByLines,
+	}
 
-	// DEBUG
-	fmt.Println("language", language)
-	fmt.Println("sortbylines", *sortByLines)
 	/*
 		parser := argparse.NewParser("clc", desc)
 		language := parser.StringList("l", "language", &argparse.Options{
@@ -115,7 +116,6 @@ func getConfig() config {
 			//File:        strSetFromSlice(*file), // TODO
 			DataForLang: dataForLang}
 	*/
-	config := config{} // TODO
 	return config
 }
 

@@ -8,15 +8,19 @@ import (
 	"sort"
 )
 
-type flagStrings []string
+type stringsFlag []string
 
-func (fs *flagStrings) String() string {
+func (fs *stringsFlag) String() string {
 	return fmt.Sprintf("%s", *fs)
 }
 
-func (fs *flagStrings) Set(value string) error {
+func (fs *stringsFlag) Set(value string) error {
 	*fs = append(*fs, value)
 	return nil
+}
+
+func (fs stringsFlag) ToSet() strSet {
+	return strSetFromSlice(fs)
 }
 
 type strSet map[string]bool
