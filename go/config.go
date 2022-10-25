@@ -6,7 +6,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/akamensky/argparse"
+	flags "github.com/jessevdk/go-flags"
 	tsize "github.com/kopoli/go-terminal-size"
 	"os"
 	"path"
@@ -16,6 +16,20 @@ import (
 
 const fileCountWidth = 7
 const lineCountWidth = 11
+
+/* TODO see: https://pkg.go.dev/github.com/jessevdk/go-flags
+	var options struct {
+		Language    []string `short:"l" long:"language" description:"Languages
+to count [default: all known]"`
+		SortByLines bool     `short:"s" long:"sortbylines"`
+	}
+	rest, err := flags.Parse(&options)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(options, rest)
+	}
+*/
 
 func getConfig() config {
 	excludes := strSet{"__pycache__": true, "build": true,
@@ -28,75 +42,78 @@ func getConfig() config {
 	desc := fmt.Sprintf("Counts the lines in the code files for the "+
 		"languages processed (ignoring . folders). "+
 		"Supported language names: %s.", strings.Join(allLangs, " "))
-	parser := argparse.NewParser("clc", desc)
-	language := parser.StringList("l", "language", &argparse.Options{
-		Required: false,
-		Help:     "The languages to count. Default: all known"})
-	skiplanguage := parser.StringList("L", "skiplanguage",
-		&argparse.Options{
+	/*
+		parser := argparse.NewParser("clc", desc)
+		language := parser.StringList("l", "language", &argparse.Options{
 			Required: false,
-			Help: "The languages not to count, " +
-				"e.g., '-L d -L cpp' with no '-l' means count all " +
-				"languages except D and C++. Default: none"})
-	exclude := parser.StringList("e", "exclude", &argparse.Options{
-		Required: false,
-		Help: fmt.Sprintf("the files and folders to exclude. "+
-			"Default: .hidden and %s",
-			strings.Join(strSetKeys(excludes), " "))})
-	include := parser.StringList("i", "include", &argparse.Options{
-		Required: false,
-		Help: "The files and folders to include (e.g., those without " +
-			"suffixes"})
-	width := 80
-	size, err := tsize.GetSize()
-	if err == nil {
-		width = size.Width
-	}
-	maxWidth := parser.Int("m", "maxwidth", &argparse.Options{
-		Required: false,
-		Help:     "Max line width to use (e.g., for redirected output)",
-		Default:  width})
-	sortByLines := parser.Flag("s", "sortbylines", &argparse.Options{
-		Required: false,
-		Help:     "Sort by lines. Default: sort by names"})
-	summary := parser.Flag("S", "summary", &argparse.Options{
-		Required: false,
-		Help: "Output per-language totals and total time if > 0.1 " +
-			"sec. Default: output per-language and per-file totals"})
-	// TODO FIXME
-	file := parser.StringPositional(&argparse.Options{
-		Required: false,
-		Help:     "The files to count or the folders to recursively search",
-	})
-	err = parser.Parse(os.Args)
-	if err != nil {
-		fmt.Print(parser.Usage(err))
-	}
-	//fmt.Println(parser.GetArgs())
-	fmt.Printf("########### %v\n", *file) // TODO
-	langs := strSet{}
-	if len(*language) == 0 {
-		langs = strSetFromSlice(allLangs)
-	} else {
-		langs = strSetFromSlice(*language)
-	}
-	if len(*skiplanguage) > 0 {
-		for _, lang := range *skiplanguage {
-			delete(langs, lang)
+			Help:     "The languages to count. Default: all known"})
+		skiplanguage := parser.StringList("L", "skiplanguage",
+			&argparse.Options{
+				Required: false,
+				Help: "The languages not to count, " +
+					"e.g., '-L d -L cpp' with no '-l' means count all " +
+					"languages except D and C++. Default: none"})
+		exclude := parser.StringList("e", "exclude", &argparse.Options{
+			Required: false,
+			Help: fmt.Sprintf("the files and folders to exclude. "+
+				"Default: .hidden and %s",
+				strings.Join(strSetKeys(excludes), " "))})
+		include := parser.StringList("i", "include", &argparse.Options{
+			Required: false,
+			Help: "The files and folders to include (e.g., those without " +
+				"suffixes"})
+		width := 80
+		size, err := tsize.GetSize()
+		if err == nil {
+			width = size.Width
 		}
-	}
-	for _, excl := range *exclude {
-		excludes[excl] = true
-	}
-	config := config{
-		Language:    langs,
-		Exclude:     excludes,
-		Include:     strSetFromSlice(*include),
-		MaxWidth:    *maxWidth - (lineCountWidth + 2),
-		SortByLines: *sortByLines,
-		Summary:     *summary,
-		//File:        strSetFromSlice(*file), // TODO
-		DataForLang: dataForLang}
+		maxWidth := parser.Int("m", "maxwidth", &argparse.Options{
+			Required: false,
+			Help:     "Max line width to use (e.g., for redirected output)",
+			Default:  width})
+		sortByLines := parser.Flag("s", "sortbylines", &argparse.Options{
+			Required: false,
+			Help:     "Sort by lines. Default: sort by names"})
+		summary := parser.Flag("S", "summary", &argparse.Options{
+			Required: false,
+			Help: "Output per-language totals and total time if > 0.1 " +
+				"sec. Default: output per-language and per-file totals"})
+		// TODO FIXME
+		file := parser.StringPositional(&argparse.Options{
+			Required: false,
+			Help:     "The files to count or the folders to recursively search",
+		})
+		err = parser.Parse(os.Args)
+		if err != nil {
+			fmt.Print(parser.Usage(err))
+		}
+		//fmt.Println(parser.GetArgs())
+		fmt.Printf("########### %v\n", *file) // TODO
+		langs := strSet{}
+		if len(*language) == 0 {
+			langs = strSetFromSlice(allLangs)
+		} else {
+			langs = strSetFromSlice(*language)
+		}
+		if len(*skiplanguage) > 0 {
+			for _, lang := range *skiplanguage {
+				delete(langs, lang)
+			}
+		}
+		for _, excl := range *exclude {
+			excludes[excl] = true
+		}
+		config := config{
+			Language:    langs,
+			Exclude:     excludes,
+			Include:     strSetFromSlice(*include),
+			MaxWidth:    *maxWidth - (lineCountWidth + 2),
+			SortByLines: *sortByLines,
+			Summary:     *summary,
+			//File:        strSetFromSlice(*file), // TODO
+			DataForLang: dataForLang}
+	*/
+	config := config{} // TODO
 	return config
 }
 

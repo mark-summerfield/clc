@@ -3,7 +3,7 @@ module github.com/mark-summerfield/clc-go
 go 1.19
 
 require (
-	github.com/akamensky/argparse v1.4.0
+	github.com/jessevdk/go-flags v1.5.0
 	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
 )
 
