@@ -1,4 +1,4 @@
-# TODO complete conversion to flag pkg
+# TODO convert to parg
 # TODO replace strSet with
 #   https://pkg.go.dev/k8s.io/apimachinery/pkg/util/sets
 go/clc.go

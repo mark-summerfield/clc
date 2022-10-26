@@ -1,7 +1,7 @@
-package main
-
 // Copyright © 2022 Mark Summerfield. All rights reserved.
 // License: GPLv3
+
+package main
 
 import (
 	"fmt"

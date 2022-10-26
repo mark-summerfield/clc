@@ -1,13 +1,14 @@
-package main
-
 // Copyright © 2022 Mark Summerfield. All rights reserved.
 // License: GPLv3
+
+package main
 
 import (
 	"bufio"
 	"flag"
 	"fmt"
 	//	tsize "github.com/kopoli/go-terminal-size"
+	"github/mark-summerfield/parg"
 	"os"
 	"path"
 	"sort"
@@ -33,6 +34,10 @@ func getConfig() config {
 			"to exclude. Default: .hidden and %s",
 			strings.Join(strSetKeys(excludes), " "))
 	*/
+	// TODO
+	parser := parg.NewParser("clc", "1.0.0")
+	fmt.Printf("parg=%v\n", parser)
+
 	var languages stringsFlag
 	flag.Var(&languages, "language",
 		"The languages to count [may be repeated; default: all known]")
