@@ -4,44 +4,31 @@
 package main
 
 import (
-	"fmt"
 	"sort"
 )
 
-type stringsFlag []string
-
-func (fs *stringsFlag) String() string {
-	return fmt.Sprintf("%s", *fs)
-}
-
-func (fs *stringsFlag) Set(value string) error {
-	*fs = append(*fs, value)
-	return nil
-}
-
-func (fs stringsFlag) ToSet() strSet {
-	return strSetFromSlice(fs)
-}
-
 type strSet map[string]bool
 
-func strSetKeys(set strSet) []string {
-	keys := make([]string, len(set))
-	i := 0
-	for key := range set {
-		keys[i] = key
-		i++
-	}
-	sort.Strings(keys)
-	return keys
+func (me strSet) elements() []string {
+	elements := mapKeys(me)
+	sort.Strings(elements)
+	return elements
 }
 
 func strSetFromSlice(s []string) strSet {
 	set := strSet{}
 	for _, key := range s {
-		set[key] = true
+		if key != "" {
+			set[key] = true
+		}
 	}
 	return set
+}
+
+func (me strSet) add(s string) {
+	if s != "" {
+		me[s] = true
+	}
 }
 
 type dataForLangMap map[string]langData
@@ -57,4 +44,24 @@ func newLangData(name string, exts ...string) langData {
 		langData.Exts[ext] = true
 	}
 	return langData
+}
+
+type keyType interface {
+	int | string
+}
+
+func mapKeys[K keyType, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func mapValues[K keyType, V any](m map[K]V) []V {
+	values := make([]V, 0, len(m))
+	for _, v := range m {
+		values = append(values, v)
+	}
+	return values
 }

@@ -3,12 +3,4 @@
 
 package main
 
-import (
-	"fmt"
-)
-
-func main() {
-	config := getConfig()
-	// TODO
-	fmt.Println(config)
-}
+const Version = "1.0.0"
