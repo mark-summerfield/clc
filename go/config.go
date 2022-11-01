@@ -23,57 +23,36 @@ func getConfig() config {
 	dataForLang := make(dataForLangMap)
 	initializeDataForLang(dataForLang)
 	readConfigFiles(dataForLang)
+	allLangs := mapKeys(dataForLang)
 	parser := garg.NewParserVersion(Version)
-	// TODO
-	//desc := fmt.Sprintf("Counts the lines in the code files for the "+
-	//	"languages processed (ignoring . folders). "+
-	//	"Supported language names: %s.", strings.Join(allLangs, " "))
-	languageOpt, err := parser.Strs("language",
+	parser.Description = fmt.Sprintf("Counts the lines in the code "+
+		"files for the languages processed (ignoring . folders). "+
+		"Supported language names: %s.", strings.Join(allLangs, " "))
+	languageOpt := parser.Strs("language",
 		"The language(s) to count [default: all known]")
-	if err != nil {
-		parser.OnError(err)
-	}
-	skipLanguageOpt, err := parser.Strs("skiplanguage",
+	skipLanguageOpt := parser.Strs("skiplanguage",
 		"The languages not to count, e.g., '-L d cpp' with no '-l' "+
 			"means count all languages except D and C++. Default: none")
 	skipLanguageOpt.SetShortName('L')
-	if err != nil {
-		parser.OnError(err)
-	}
-	excludeOpt, err := parser.Strs("exclude",
+	excludeOpt := parser.Strs("exclude",
 		fmt.Sprintf("The files and folders to exclude [default: .hidden "+
 			"and %s]", strings.Join(excludes.elements(), " ")))
-	if err != nil {
-		parser.OnError(err)
-	}
-	includeOpt, err := parser.Strs("include",
+	includeOpt := parser.Strs("include",
 		"The files to include (e.g., those without suffixes)")
-	if err != nil {
-		parser.OnError(err)
-	}
 	width := 80
 	size, err := tsize.GetSize()
 	if err == nil {
 		width = size.Width
 	}
-	maxWidthOpt, err := parser.IntInRange("maxwidth",
+	maxWidthOpt := parser.IntInRange("maxwidth",
 		"Max line width to use (e.g., for redirected output)", 0, 10000,
 		width)
-	if err != nil {
-		parser.OnError(err)
-	}
-	sortByLinesOpt, err := parser.Flag("sortbylines",
+	sortByLinesOpt := parser.Flag("sortbylines",
 		"Sort by lines. Default: sort by names")
-	if err != nil {
-		parser.OnError(err)
-	}
-	summaryOpt, err := parser.Flag("summary",
+	summaryOpt := parser.Flag("summary",
 		"Output per-language totals and total time if > 0.1 sec. "+
 			"Default: output per-language and per-file totals")
 	summaryOpt.SetShortName('S')
-	if err != nil {
-		parser.OnError(err)
-	}
 	if err = parser.Parse(); err != nil {
 		parser.OnError(err)
 	}
@@ -81,7 +60,7 @@ func getConfig() config {
 	if languageOpt.Given() {
 		langs = strSetFromSlice(languageOpt.Value())
 	} else {
-		langs = strSetFromSlice(mapKeys(dataForLang))
+		langs = strSetFromSlice(allLangs)
 	}
 	if skipLanguageOpt.Given() {
 		for _, lang := range skipLanguageOpt.Value() {

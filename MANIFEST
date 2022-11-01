@@ -4,6 +4,7 @@ go/clc.go
 go/config.go
 go/util.go
 go/consts.go
+go/go.mod
 
 clc.py
 
