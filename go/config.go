@@ -1,5 +1,5 @@
 // Copyright © 2022 Mark Summerfield. All rights reserved.
-// License: GPLv3
+// License: Apache-2.0
 
 package main
 
@@ -7,7 +7,7 @@ import (
 	"bufio"
 	"fmt"
 	tsize "github.com/kopoli/go-terminal-size"
-	"github.com/mark-summerfield/garg"
+	"github.com/mark-summerfield/clop"
 	"os"
 	"path"
 	"path/filepath"
@@ -24,7 +24,7 @@ func getConfig() config {
 	initializeDataForLang(dataForLang)
 	readConfigFiles(dataForLang)
 	allLangs := mapKeys(dataForLang)
-	parser := garg.NewParserVersion(Version)
+	parser := clop.NewParserVersion(Version)
 	parser.Description = fmt.Sprintf("Counts the lines in the code "+
 		"files for the languages processed (ignoring . folders). "+
 		"Supported language names: %s.", strings.Join(allLangs, " "))
