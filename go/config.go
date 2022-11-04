@@ -7,7 +7,7 @@ import (
 	"bufio"
 	"fmt"
 	tsize "github.com/kopoli/go-terminal-size"
-	"github.com/mark-summerfield/clop"
+	"github.com/mark-summerfield/clip"
 	"os"
 	"path"
 	"path/filepath"
@@ -24,7 +24,7 @@ func getConfig() config {
 	initializeDataForLang(dataForLang)
 	readConfigFiles(dataForLang)
 	allLangs := mapKeys(dataForLang)
-	parser := clop.NewParserVersion(Version)
+	parser := clip.NewParserVersion(Version)
 	parser.Description = fmt.Sprintf("Counts the lines in the code "+
 		"files for the languages processed (ignoring . folders). "+
 		"Supported language names: %s.", strings.Join(allLangs, " "))

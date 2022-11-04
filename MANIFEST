@@ -1,4 +1,4 @@
-# TODO replace strSet with
+# TODO replace strSet with - or my own gong.Set
 #   https://pkg.go.dev/k8s.io/apimachinery/pkg/util/sets
 go/clc.go
 go/config.go
