@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -24,10 +25,21 @@ func getConfig() config {
 	initializeDataForLang(dataForLang)
 	readConfigFiles(dataForLang)
 	allLangs := mapKeys(dataForLang)
+	sort.Strings(allLangs)
 	parser := clip.NewParserVersion(Version)
-	parser.Description = fmt.Sprintf("Counts the lines in the code "+
-		"files for the languages processed (ignoring . folders). "+
-		"Supported language names: %s.", strings.Join(allLangs, " "))
+	parser.PositionalHelp = "Files to count or the folders to " +
+		"recursively search [default: .]"
+	parser.LongDesc = "Counts the lines in the code " +
+		"files for the languages processed (ignoring . folders).\n\n " +
+		"Supported language names: " + strings.Join(allLangs, " ") + "."
+	parser.EndDesc = "The above language names are the built-in ones " +
+		"and those from any clc.dat files that were found. The clc.dat " +
+		"files are looked for in the clc executable's folder, the home " +
+		"folder, the home/.config folder, and the current folder. " +
+		"These files have the form:\n\n" +
+		"lang|Name|ext1 [ext2 [ext3 ... [extN]]]\n\n" +
+		"For example:\n\n pas|Pascal|pas pp inc\n\n" +
+		"Blank lines and lines beginning with `#` are ignored."
 	languageOpt := parser.Strs("language",
 		"The language(s) to count [default: all known]")
 	_ = languageOpt.SetVarName("LANG")
@@ -37,8 +49,8 @@ func getConfig() config {
 	skipLanguageOpt.SetShortName('L')
 	_ = skipLanguageOpt.SetVarName("LANG")
 	excludeOpt := parser.Strs("exclude",
-		fmt.Sprintf("The files and folders to exclude [default: .hidden "+
-			"and %s]", strings.Join(excludes.elements(), " ")))
+		"The files and folders to exclude [default: .hidden and "+
+			strings.Join(excludes.elements(), " ")+"]")
 	_ = excludeOpt.SetVarName("EXCL")
 	includeOpt := parser.Strs("include",
 		"The files to include (e.g., those without suffixes)")
