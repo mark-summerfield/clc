@@ -16,9 +16,6 @@ import (
 	"strings"
 )
 
-const fileCountWidth = 7
-const lineCountWidth = 11
-
 func getConfig() config {
 	excludes := gset.New("__pycache__", "build", "build.rs", "CVS", "dist",
 		"setup.py", "target")
