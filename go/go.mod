@@ -3,9 +3,10 @@ module github.com/mark-summerfield/clc-go
 go 1.19
 
 require (
+	github.com/edsrzf/mmap-go v1.1.0
 	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
 	github.com/mark-summerfield/clip v0.4.2
-	github.com/mark-summerfield/gset v0.2.0
+	github.com/mark-summerfield/gset v0.3.1
 )
 
 require (
