@@ -80,6 +80,7 @@ func processFiles(files []string, config *config) []*fileDatum {
 			fileData = append(fileData, datum)
 		}
 	}
+	close(fileChan)
 	return fileData
 }
 
