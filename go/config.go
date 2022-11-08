@@ -8,6 +8,7 @@ import (
 	"fmt"
 	tsize "github.com/kopoli/go-terminal-size"
 	"github.com/mark-summerfield/clip"
+	"github.com/mark-summerfield/gset"
 	"os"
 	"path"
 	"path/filepath"
@@ -19,8 +20,8 @@ const fileCountWidth = 7
 const lineCountWidth = 11
 
 func getConfig() config {
-	excludes := strSetFromSlice([]string{"__pycache__", "build", "build.rs",
-		"CVS", "dist", "setup.py", "target"})
+	excludes := gset.New("__pycache__", "build", "build.rs", "CVS", "dist",
+		"setup.py", "target")
 	dataForLang := make(dataForLangMap)
 	initializeDataForLang(dataForLang)
 	readConfigFiles(dataForLang)
@@ -50,7 +51,7 @@ func getConfig() config {
 	_ = skipLanguageOpt.SetVarName("LANG")
 	excludeOpt := parser.Strs("exclude",
 		"The files and folders to exclude [default: .hidden and "+
-			strings.Join(excludes.elements(), " ")+"]")
+			strings.Join(excludes.ToSlice(), " ")+"]")
 	_ = excludeOpt.SetVarName("EXCL")
 	includeOpt := parser.Strs("include",
 		"The files to include (e.g., those without suffixes)")
@@ -72,27 +73,21 @@ func getConfig() config {
 	if err = parser.Parse(); err != nil {
 		parser.OnError(err)
 	}
-	var langs strSet
+	langs := gset.New[string]()
 	if languageOpt.Given() {
-		langs = strSetFromSlice(languageOpt.Value())
+		langs.Add(languageOpt.Value()...)
 	} else {
-		langs = strSetFromSlice(allLangs)
+		langs.Add(allLangs...)
 	}
 	if skipLanguageOpt.Given() {
-		for _, lang := range skipLanguageOpt.Value() {
-			delete(langs, lang)
-		}
+		langs.Delete(skipLanguageOpt.Value()...)
 	}
 	if excludeOpt.Given() {
-		for _, exclude := range excludeOpt.Value() {
-			excludes.add(exclude)
-		}
+		excludes.Add(excludeOpt.Value()...)
 	}
-	includes := make(strSet)
+	includes := gset.New[string]()
 	if includeOpt.Given() {
-		for _, include := range includeOpt.Value() {
-			includes.add(include)
-		}
+		includes.Add(includeOpt.Value()...)
 	}
 	config := config{
 		Language:    langs,
@@ -107,8 +102,8 @@ func getConfig() config {
 	return config
 }
 
-func getPaths(positionals []string) strSet {
-	files := make(strSet)
+func getPaths(positionals []string) gset.Set[string] {
+	files := gset.New[string]()
 	if len(positionals) == 0 {
 		addPath(".", files)
 	} else {
@@ -119,12 +114,12 @@ func getPaths(positionals []string) strSet {
 	return files
 }
 
-func addPath(filename string, files strSet) {
+func addPath(filename string, files gset.Set[string]) {
 	path, err := filepath.Abs(filename)
 	if err == nil {
-		files.add(path)
+		files.Add(path)
 	} else {
-		files.add(filename)
+		files.Add(filename)
 	}
 }
 
@@ -191,22 +186,22 @@ func readConfigFile(dataForLang dataForLangMap, filename string) {
 }
 
 type config struct {
-	Language    strSet
-	Exclude     strSet
-	Include     strSet
+	Language    gset.Set[string]
+	Exclude     gset.Set[string]
+	Include     gset.Set[string]
 	MaxWidth    int
 	SortByLines bool
 	Summary     bool
-	File        strSet
+	File        gset.Set[string]
 	DataForLang dataForLangMap
 }
 
 func (me config) String() string {
 	return fmt.Sprintf("Language=[%s]\nExclude=[%s]\nInclude=[%s]\n"+
 		"MaxWidth=%d\nSortByLines=%t\nSummary=%t\nFile=[%s]",
-		strings.Join(me.Language.elements(), " "),
-		strings.Join(me.Exclude.elements(), " "),
-		strings.Join(me.Include.elements(), " "),
+		strings.Join(me.Language.ToSlice(), " "),
+		strings.Join(me.Exclude.ToSlice(), " "),
+		strings.Join(me.Include.ToSlice(), " "),
 		me.MaxWidth, me.SortByLines, me.Summary,
-		strings.Join(me.File.elements(), " "))
+		strings.Join(me.File.ToSlice(), " "))
 }

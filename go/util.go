@@ -4,46 +4,18 @@
 package main
 
 import (
-	"sort"
+	"github.com/mark-summerfield/gset"
 )
-
-type strSet map[string]bool
-
-func (me strSet) elements() []string {
-	elements := mapKeys(me)
-	sort.Strings(elements)
-	return elements
-}
-
-func strSetFromSlice(s []string) strSet {
-	set := strSet{}
-	for _, key := range s {
-		if key != "" {
-			set[key] = true
-		}
-	}
-	return set
-}
-
-func (me strSet) add(s string) {
-	if s != "" {
-		me[s] = true
-	}
-}
 
 type dataForLangMap map[string]langData
 
 type langData struct {
 	Name string
-	Exts strSet
+	Exts gset.Set[string]
 }
 
 func newLangData(name string, exts ...string) langData {
-	langData := langData{Name: name, Exts: make(strSet)}
-	for _, ext := range exts {
-		langData.Exts[ext] = true
-	}
-	return langData
+	return langData{Name: name, Exts: gset.New(exts...)}
 }
 
 type keyType interface {
