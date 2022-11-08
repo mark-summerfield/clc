@@ -91,14 +91,13 @@ func processFile(filename string, config *config, out chan *fileDatum) {
 		out <- nil
 		return
 	}
+	defer file.Close()
 	mm, err := mmap.Map(file, mmap.RDONLY, 0)
 	if err != nil {
-		file.Close()
 		out <- nil
 		return
 	}
+	defer func() { _ = mm.Unmap() }()
 	datum.lines = bytes.Count(mm, []byte("\n"))
-	_ = mm.Unmap()
-	file.Close()
 	out <- datum
 }
