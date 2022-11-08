@@ -13,3 +13,7 @@ type fileDatum struct {
 	filename string
 	lines    int
 }
+
+func (me fileDatum) IsValid() bool {
+	return me.filename != "" && me.lines >= 0
+}
