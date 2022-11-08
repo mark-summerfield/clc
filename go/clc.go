@@ -37,6 +37,8 @@ func getFilenames(config *config) []string {
 			if info.IsDir() {
 				_ = filepath.WalkDir(name,
 					func(path string, de fs.DirEntry, err error) error {
+						// TODO entire dir can be skipped by returning
+						// fs.SkipDir
 						if err == nil && !de.IsDir() {
 							if validFilename(path, config) {
 								files = append(files, path)
@@ -66,35 +68,36 @@ func validFilename(name string, config *config) bool {
 	return true
 }
 
-func processFiles(files []string, config *config) []fileDatum {
-	fileChan := make(chan fileDatum)
+func processFiles(files []string, config *config) []*fileDatum {
+	fileChan := make(chan *fileDatum)
 	for _, filename := range files {
 		go processFile(filename, config, fileChan)
 	}
-	fileData := make([]fileDatum, 0, len(files))
+	fileData := make([]*fileDatum, 0, len(files))
 	for i := 0; i < len(files); i++ {
 		datum := <-fileChan
-		if datum.IsValid() {
+		if datum != nil {
 			fileData = append(fileData, datum)
 		}
 	}
 	return fileData
 }
 
-func processFile(filename string, config *config, out chan fileDatum) {
-	datum := fileDatum{filename: filename, lines: -1} // invalid
+func processFile(filename string, config *config, out chan *fileDatum) {
+	datum := &fileDatum{filename: filename}
 	file, err := os.Open(filename)
 	if err != nil {
-		out <- datum
+		out <- nil
 		return
 	}
-	defer file.Close()
 	mm, err := mmap.Map(file, mmap.RDONLY, 0)
 	if err != nil {
-		out <- datum
+		file.Close()
+		out <- nil
 		return
 	}
-	defer func() { _ = mm.Unmap() }()
 	datum.lines = bytes.Count(mm, []byte("\n"))
+	_ = mm.Unmap()
+	file.Close()
 	out <- datum
 }
