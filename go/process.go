@@ -4,6 +4,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"github.com/edsrzf/mmap-go"
 	"os"
@@ -28,7 +29,6 @@ func processFiles(files []string, config *config) []*fileDatum {
 }
 
 func processFile(filename string, config *config, out chan *fileDatum) {
-	datum := &fileDatum{filename: filename}
 	lang := langForName(filename, config.dataForLang)
 	file, err := os.Open(filename)
 	if err != nil {
@@ -44,15 +44,24 @@ func processFile(filename string, config *config, out chan *fileDatum) {
 		}
 		lang = langForLine(string(line))
 	}
+	lines := 0
+	nl := []byte("\n")
 	mm, err := mmap.Map(file, mmap.RDONLY, 0)
-	if err != nil {
-		out <- nil
-		return
+	if err == nil {
+		defer func() { _ = mm.Unmap() }()
+		lines = bytes.Count(mm, nl)
+	} else {
+		reader := bufio.NewReader(file)
+		buffer := make([]byte, 16384)
+		for {
+			n, err := reader.Read(buffer)
+			if err != nil {
+				break // real error or io.EOF
+			}
+			lines += bytes.Count(buffer[:n], nl)
+		}
 	}
-	defer func() { _ = mm.Unmap() }()
-	datum.lang = lang
-	datum.lines = bytes.Count(mm, []byte("\n"))
-	out <- datum
+	out <- &fileDatum{lang, filename, lines}
 }
 
 func langForName(name string, dataForLang dataForLangMap) string {

@@ -40,7 +40,7 @@ func displaySummary(dataForLang dataForLangMap, fileData []*fileDatum,
 		out.Printf(lineFmt, langName, count, s, datum.total)
 	}
 	if d.Seconds() > 0.1 {
-		fmt.Printf("%0.3f\n", d.Seconds())
+		fmt.Printf("%0.3f sec\n", d.Seconds())
 	}
 }
 
