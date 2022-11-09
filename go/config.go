@@ -20,7 +20,7 @@ import (
 func getConfig() config {
 	excludes := gset.New("__pycache__", "build", "build.rs", "CVS", "dist",
 		"setup.py", "target")
-	dataForLang := make(dataForLangMap)
+	dataForLang := dataForLangMap{}
 	initializeDataForLang(dataForLang)
 	readConfigFiles(dataForLang)
 	allLangs := gong.MapKeys(dataForLang)

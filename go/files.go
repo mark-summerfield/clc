@@ -13,7 +13,7 @@ import (
 )
 
 func getFilenames(config *config) []string {
-	files := make([]string, 0)
+	var files []string
 	for name := range config.file {
 		if info, err := os.Stat(name); err == nil {
 			if info.IsDir() {
