@@ -43,3 +43,8 @@ func mapValues[K keyType, V any](m map[K]V) []V {
 	}
 	return values
 }
+
+type langAndTotal struct {
+	lang string
+	total int
+}
