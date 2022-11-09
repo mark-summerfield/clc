@@ -45,6 +45,6 @@ func mapValues[K keyType, V any](m map[K]V) []V {
 }
 
 type langAndTotal struct {
-	lang string
+	lang  string
 	total int
 }
