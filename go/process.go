@@ -38,8 +38,10 @@ func processFile(filename string, config *config, out chan *fileDatum) {
 	defer file.Close()
 	if lang == "" {
 		line := make([]byte, 0, 60)
-		file.Read(line)
-		file.Seek(0, 0)
+		_, err = file.Read(line)
+		if err == nil {
+			_, _ = file.Seek(0, 0)
+		}
 		lang = langForLine(string(line))
 	}
 	mm, err := mmap.Map(file, mmap.RDONLY, 0)

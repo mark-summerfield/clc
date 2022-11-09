@@ -65,6 +65,10 @@ func getLangAndTotals(totalForLang map[string]int,
 	return langAndTotals
 }
 
+func displayFull(dataForLang dataForLangMap, fileData []*fileDatum,
+	sortByLines bool, maxWidth int) {
+}
+
 /*
 	func sortFileData(fileData []*fileDatum, sortByLines bool) {
 		sort.Slice(fileData, func(i, j int) bool {
@@ -81,6 +85,3 @@ func getLangAndTotals(totalForLang map[string]int,
 		})
 	}
 */
-func displayFull(dataForLang dataForLangMap, fileData []*fileDatum,
-	sortByLines bool, maxWidth int) {
-}
