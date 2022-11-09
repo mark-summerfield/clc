@@ -5,8 +5,9 @@ package main
 
 import (
 	"fmt"
+	"golang.org/x/text/message"
 	"sort"
-	//	"strings"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -21,26 +22,44 @@ func displaySummary(dataForLang dataForLangMap, fileData []*fileDatum,
 			langWidth = size
 		}
 	}
+	lineFmt := fmt.Sprintf("%%-%ds %%%dd file%%s %%%dd lines\n", langWidth,
+		fileCountWidth, lineCountWidth)
 	for _, datum := range fileData {
 		totalForLang[datum.lang] += datum.lines
 		countForLang[datum.lang] += 1
 	}
 	langAndTotals := getLangAndTotals(totalForLang, sortByLines)
-	// TODO
+	out := message.NewPrinter(message.MatchLanguage("en"))
+	for _, datum := range langAndTotals {
+		count := countForLang[datum.lang]
+		s := "s"
+		if count == 1 {
+			s = " "
+		}
+		langName := dataForLang[datum.lang].name
+		out.Printf(lineFmt, langName, count, s, datum.total)
+	}
 	if d.Seconds() > 0.1 {
-		fmt.Println(d)
+		fmt.Printf("%0.3f\n", d.Seconds())
 	}
 }
 
 func getLangAndTotals(totalForLang map[string]int,
 	sortByLines bool) []langAndTotal {
-	langAndTotals := make([]langAndTotal, len(totalForLang))
+	langAndTotals := make([]langAndTotal, 0, len(totalForLang))
 	for lang, total := range totalForLang {
 		langAndTotals = append(langAndTotals, langAndTotal{lang, total})
 	}
 	sort.Slice(langAndTotals, func(i, j int) bool {
 		if sortByLines {
+			if langAndTotals[i].total == langAndTotals[j].total {
+				return strings.ToLower(langAndTotals[i].lang) <
+					strings.ToLower(langAndTotals[j].lang)
+			}
+			return langAndTotals[i].total < langAndTotals[j].total
 		} else {
+			return strings.ToLower(langAndTotals[i].lang) <
+				strings.ToLower(langAndTotals[j].lang)
 		}
 	})
 	return langAndTotals
