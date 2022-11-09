@@ -7,15 +7,21 @@ import (
 	"github.com/mark-summerfield/gset"
 )
 
+type fileDatum struct {
+	lang     string
+	filename string
+	lines    int
+}
+
 type dataForLangMap map[string]langData
 
 type langData struct {
-	Name string
-	Exts gset.Set[string]
+	name string
+	exts gset.Set[string]
 }
 
 func newLangData(name string, exts ...string) langData {
-	return langData{Name: name, Exts: gset.New(exts...)}
+	return langData{name: name, exts: gset.New(exts...)}
 }
 
 type keyType interface {

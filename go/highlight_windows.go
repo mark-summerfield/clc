@@ -6,7 +6,7 @@
 package main
 
 const (
-	Thin     = "-"
-	Thick    = "="
-	Ellipsis = "..."
+	thin     = "-"
+	thick    = "="
+	ellipsis = "..."
 )

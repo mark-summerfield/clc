@@ -34,7 +34,7 @@ func getConfig() config {
 		"and those from any clc.dat files that were found. The clc.dat " +
 		"files are looked for in the clc executable's folder, the home " +
 		"folder, the home/.config folder, and the current folder. " +
-		"These files have the form:\n\n" +
+		"These files have lines of the form:\n\n" +
 		"lang|Name|ext1 [ext2 [ext3 ... [extN]]]\n\n" +
 		"For example:\n\n pas|Pascal|pas pp inc\n\n" +
 		"Blank lines and lines beginning with `#` are ignored."
@@ -87,14 +87,14 @@ func getConfig() config {
 		includes.Add(includeOpt.Value()...)
 	}
 	config := config{
-		Language:    langs,
-		Exclude:     excludes,
-		Include:     includes,
-		MaxWidth:    maxWidthOpt.Value() - (lineCountWidth + 2),
-		SortByLines: sortByLinesOpt.Value(),
-		Summary:     summaryOpt.Value(),
-		File:        getPaths(parser.Positionals),
-		DataForLang: dataForLang,
+		language:    langs,
+		exclude:     excludes,
+		include:     includes,
+		maxWidth:    maxWidthOpt.Value() - (lineCountWidth + 2),
+		sortByLines: sortByLinesOpt.Value(),
+		summary:     summaryOpt.Value(),
+		file:        getPaths(parser.Positionals),
+		dataForLang: dataForLang,
 	}
 	return config
 }
@@ -183,22 +183,22 @@ func readConfigFile(dataForLang dataForLangMap, filename string) {
 }
 
 type config struct {
-	Language    gset.Set[string]
-	Exclude     gset.Set[string]
-	Include     gset.Set[string]
-	MaxWidth    int
-	SortByLines bool
-	Summary     bool
-	File        gset.Set[string]
-	DataForLang dataForLangMap
+	language    gset.Set[string]
+	exclude     gset.Set[string]
+	include     gset.Set[string]
+	maxWidth    int
+	sortByLines bool
+	summary     bool
+	file        gset.Set[string]
+	dataForLang dataForLangMap
 }
 
 func (me config) String() string {
 	return fmt.Sprintf("Language=[%s]\nExclude=[%s]\nInclude=[%s]\n"+
 		"MaxWidth=%d\nSortByLines=%t\nSummary=%t\nFile=[%s]",
-		strings.Join(me.Language.ToSlice(), " "),
-		strings.Join(me.Exclude.ToSlice(), " "),
-		strings.Join(me.Include.ToSlice(), " "),
-		me.MaxWidth, me.SortByLines, me.Summary,
-		strings.Join(me.File.ToSlice(), " "))
+		strings.Join(me.language.ToSlice(), " "),
+		strings.Join(me.exclude.ToSlice(), " "),
+		strings.Join(me.include.ToSlice(), " "),
+		me.maxWidth, me.sortByLines, me.summary,
+		strings.Join(me.file.ToSlice(), " "))
 }

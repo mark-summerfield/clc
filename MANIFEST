@@ -1,4 +1,7 @@
 go/clc.go
+go/display.go
+go/process.go
+go/files.go
 go/config.go
 go/util.go
 go/consts.go

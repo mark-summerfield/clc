@@ -7,9 +7,3 @@ const Version = "1.0.0"
 
 const fileCountWidth = 7
 const lineCountWidth = 11
-
-type fileDatum struct {
-	lang     string
-	filename string
-	lines    int
-}
