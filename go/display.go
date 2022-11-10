@@ -103,19 +103,16 @@ func displayFull(dataForLang dataForLangMap, fileData []*fileDatum,
 
 func sortFileData(fileData []*fileDatum, sortByLines bool) {
 	sort.Slice(fileData, func(i, j int) bool {
+		if fileData[i].lang != fileData[j].lang {
+			return fileData[i].lang < fileData[j].lang
+		}
 		if sortByLines {
-			if fileData[i].lang != fileData[j].lang {
-				return fileData[i].lang < fileData[j].lang
-			}
 			if fileData[i].lines == fileData[j].lines {
 				return strings.ToLower(fileData[i].filename) <
 					strings.ToLower(fileData[j].filename)
 			}
 			return fileData[i].lines < fileData[j].lines
 		} else {
-			if fileData[i].lang != fileData[j].lang {
-				return fileData[i].lang < fileData[j].lang
-			}
 			return strings.ToLower(fileData[i].filename) <
 				strings.ToLower(fileData[j].filename)
 		}

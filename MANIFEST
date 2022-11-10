@@ -5,7 +5,7 @@ go/files.go
 go/config.go
 go/util.go
 go/consts.go
-go/highlight.go
+go/highlight_unix.go
 go/highlight_windows.go
 go/go.mod
 
