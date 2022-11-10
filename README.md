@@ -1,26 +1,44 @@
 # clc (count code lines)
 
-There are two tools here that count newlines in code files.
+There are three tools here that count newlines in code files.
 
-Both have command line options to specify which languages to consider or
-exclude, and which files and folders to include or exclude. They sort
+All three have command line options to specify which languages to consider
+or exclude, and which files and folders to include or exclude. They sort
 case-insensitive alphabetically within language groups, but can sort by
 lines. They use the width needed, or the terminal width if narrower, or the
 width specified.
 
-`clc.py` is written in Python 3 and has no dependencies beyond the standard
-library.
+- `clc.py` is written in Python (~320 LOC).
+- `go/clc` is written in Go (~600 LOC).
+- `rs/clc` is written in Rust (~800 LOC).
 
-`clc` is written in Rust—and is _much_ faster—but has to be built and has a
-larger executable.
+For small projects (a few tens of thousands of lines of code) they're all
+quick enough not to notice any difference.
+
+For large code bases (millions of lines, tens of thousands of files), the
+speed differences are noticable. In these cases, the Python version runs
+about 10% faster the second and subsequent times compared to the first time.
+The Go version is more than twice as fast the second and subsequent times,
+and is about 5x faster than Python. The Rust version runs almost twice as
+fast the second and subsequent times and is more than 10x faster than
+Python.
+
+I found the Python and Go versions much easier to write than the Rust
+version. The Go version is by far the easiest to deploy: you can build a
+standalone executable on any supported platform to target any supported
+platform. For Rust you need to build on each platform or use a
+cross-compilation toolchain. For Python, in this case deployment is tricky
+even though there are no dependencies: you either need to ensure that the
+target machine has a suitable Python or use a tool to create an executable.
 
 ## Example Summary
 
 At one time in ``clc.py``'s folder, `clc.py -S` produced:
 
 ```
-Python       1 file          284 lines
-Rust         8 files         710 lines
+Go           9 files         612 lines
+Python       1 file          321 lines
+Rust         8 files         815 lines
 ```
 
 ## Example Full
@@ -28,22 +46,34 @@ Rust         8 files         710 lines
 At one time in ``clc.py``'s folder, `clc.py` produced:
 
 ```
-━━━━━━━━━━━━━━━━━━━━ Python ━━━━━━━━━━━━━━━━━━━━
-/home/mark/app/clc/clc.py                    284
-────────────────────────────────────────────────
-Python                 1 file          284 lines
-━━━━━━━━━━━━━━━━━━━━━ Rust ━━━━━━━━━━━━━━━━━━━━━
-/home/mark/app/clc/rs/src/cli.rs              66
-/home/mark/app/clc/rs/src/config.rs           97
-/home/mark/app/clc/rs/src/consts.rs           45
-/home/mark/app/clc/rs/src/display.rs         247
-/home/mark/app/clc/rs/src/main.rs            113
-/home/mark/app/clc/rs/src/types.rs            33
-/home/mark/app/clc/rs/src/util.rs             30
-/home/mark/app/clc/rs/src/valid.rs            79
-────────────────────────────────────────────────
-Rust                   8 files         710 lines
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━ Go ━━━━━━━━━━━━━━━━━━━━━━━━━
+/home/mark/app/clc/go/clc.go                        20
+/home/mark/app/clc/go/config.go                    205
+/home/mark/app/clc/go/consts.go                      9
+/home/mark/app/clc/go/display.go                   149
+/home/mark/app/clc/go/files.go                      75
+/home/mark/app/clc/go/highlight_unix.go             12
+/home/mark/app/clc/go/highlight_windows.go          12
+/home/mark/app/clc/go/process.go                   100
+/home/mark/app/clc/go/util.go                       30
+──────────────────────────────────────────────────────
+Go                           9 files         612 lines
+━━━━━━━━━━━━━━━━━━━━━━━ Python ━━━━━━━━━━━━━━━━━━━━━━━
+/home/mark/app/clc/clc.py                          321
+──────────────────────────────────────────────────────
+Python                       1 file          321 lines
+━━━━━━━━━━━━━━━━━━━━━━━━ Rust ━━━━━━━━━━━━━━━━━━━━━━━━
+/home/mark/app/clc/rs/src/cli.rs                    60
+/home/mark/app/clc/rs/src/config.rs                226
+/home/mark/app/clc/rs/src/consts.rs                 25
+/home/mark/app/clc/rs/src/display.rs               247
+/home/mark/app/clc/rs/src/main.rs                  113
+/home/mark/app/clc/rs/src/types.rs                  35
+/home/mark/app/clc/rs/src/util.rs                   30
+/home/mark/app/clc/rs/src/valid.rs                  79
+──────────────────────────────────────────────────────
+Rust                         8 files         815 lines
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 Note that on Windows `=` and `-` are used for the lines and `...` for elided
