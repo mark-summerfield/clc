@@ -8,8 +8,8 @@ import (
 	"fmt"
 	tsize "github.com/kopoli/go-terminal-size"
 	"github.com/mark-summerfield/clip"
-	"github.com/mark-summerfield/gong"
 	"github.com/mark-summerfield/gset"
+	"golang.org/x/exp/maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -23,7 +23,7 @@ func getConfig() config {
 	dataForLang := dataForLangMap{}
 	initializeDataForLang(dataForLang)
 	readConfigFiles(dataForLang)
-	allLangs := gong.MapKeys(dataForLang)
+	allLangs := maps.Keys(dataForLang)
 	sort.Strings(allLangs)
 	parser := clip.NewParserVersion(Version)
 	parser.PositionalHelp = "Files to count or the folders to " +
