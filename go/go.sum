@@ -6,8 +6,8 @@ github.com/mark-summerfield/clip v0.4.3 h1:1HEhWt9oWVB4+G+ldri/fijYyTFjidHPd6Xkf
 github.com/mark-summerfield/clip v0.4.3/go.mod h1:zQPN8MqUMag8TElYv3AJz+gEX6UpvKGAXdsyyh+XrTY=
 github.com/mark-summerfield/gong v0.4.2 h1:osqv+DliF7FCtQFXG+n3NwwgSYIuruMzqYSOU5UVTDY=
 github.com/mark-summerfield/gong v0.4.2/go.mod h1:F+hSIP39FQSKkHUnyO6WDOK84VGaD2Y3wLaGIDU6fl8=
-github.com/mark-summerfield/gset v0.7.0 h1:x/o9OirV6PKUBb/67aOWYdQMGpZ7iQyZ5rGSs0eTzcA=
-github.com/mark-summerfield/gset v0.7.0/go.mod h1:tKC/xw9eYm52cH40BZMRTQNJRLeyio4s16djhVvP2o0=
+github.com/mark-summerfield/gset v0.7.1 h1:ffM50M84Wqa7EvMvhrYOsU2uDP4gp3xKHjX244YfCGQ=
+github.com/mark-summerfield/gset v0.7.1/go.mod h1:tKC/xw9eYm52cH40BZMRTQNJRLeyio4s16djhVvP2o0=
 github.com/mattn/go-isatty v0.0.16 h1:bq3VjFmv/sOjHtdEhmkEV4x1AJtvUvOJ2PFAZ5+peKQ=
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
 golang.org/x/exp v0.0.0-20221110155412-d0897a79cd37 h1:wKMvZzBFHbOCGvF2OmxR5Fqv/jDlkt7slnPz5ejEU8A=
