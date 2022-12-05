@@ -1,9 +1,3 @@
-# TODO
-# 1. build & get timings on -S ~
-# 2.i. add a wait group & add wg.Add(len(files))
-# 2.ii. for every file call wg.Done() & instead of sending nil, only
-#	send when there's a result
-# 3. build & get timings on -S ~ to compare
 go/clc.go
 go/display.go
 go/process.go
