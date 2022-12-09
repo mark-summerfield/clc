@@ -1,3 +1,5 @@
+vala/clc.vala
+
 go/clc.go
 go/display.go
 go/process.go
